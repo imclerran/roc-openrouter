@@ -20,7 +20,7 @@ main =
         |> AI.setProviderOrder providers
         |> AI.setTemperature 0.7
     query = "What is the meaning of life?"
-    messages = AI.appendUserMessage [] query
+    messages = initializeMessages |> AI.appendUserMessage query
     request = AI.createRequest client messages
     response = Http.send! request
     responseBody =
@@ -52,6 +52,14 @@ getModelChoice =
     choiceStr <- Stdin.line |> Task.map
     Dict.get modelChoices choiceStr
     |> Result.withDefault defaultModel
+
+## Initialize the message list with a system message
+initializeMessages = 
+    [] |> AI.appendSystemMessage 
+    """
+    You are a helpful assistant, who answers questions in a concise and friendly manner. 
+    If you do not have knowledge about the on the users inquires about, you should politely tell them you cannot help.
+    """
 
 ## The default model selection
 defaultModel = "meta-llama/llama-3-8b-instruct:free"
