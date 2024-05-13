@@ -32,6 +32,7 @@ import json.Option exposing [Option]
 
 TimeoutConfig : [TimeoutMilliseconds U64, NoTimeout]
 
+## The record used to store configuration for the OpenRouter API client.
 Client : {
     apiKey : Str,
     model : Str,
@@ -50,6 +51,7 @@ Client : {
     maxTokens: Option U64,
 }
 
+## The request object to be sent with basic-cli's Http.send 
 RequestObject : {
     method : [Post],
     headers : List [Header Str Str],
@@ -59,11 +61,13 @@ RequestObject : {
     timeout : TimeoutConfig,
 }
 
+## The OpenAI ChatML standard message used to query the AI model.
 Message : {
     role: Str,
     content: Str,
 }
 
+## The structure of the request body to be sent in the Http request
 RequestBody : {
     model : Str,
     messages: List Message,
@@ -82,6 +86,7 @@ RequestBody : {
     },
 }
 
+## The structure of the JSON response from the OpenAI API
 ApiResponse : {
     id : Str,
     model : Str,
@@ -100,6 +105,7 @@ ApiResponse : {
     },
 }
 
+## The structure of the JSON error response from the OpenAI API
 ErrorResponse : {
     error : {
         code : U16,
@@ -110,6 +116,8 @@ ErrorResponse : {
 defaultModel = "openrouter/auto"
 defaultUrl = "https://openrouter.ai/api/v1/chat/completions"
 
+## Initialize the OpenRouter API client with the required API key.
+## Other parameters may optionally be set during initialization, or assigned later.
 init : { 
         apiKey : Str, 
         model ? Str, 
@@ -165,15 +173,20 @@ init = \{
     |> setSeed seed
     |> setMaxTokens maxTokens
 
+## Set the model to be used for the API requests.
 setModel : Client, Str -> Client
 setModel = \client, model -> { client & model }
 
+## Set the URL to be used for the API requests.
+## (Change with care - while the openrouter.ai API is similar to OpenAI's, there may be some unexpected differences.)
 setUrl : Client, Str -> Client
 setUrl = \client, url -> { client & url }
 
+## Set the request timeout for the API requests.
 setRequestTimeout : Client, TimeoutConfig -> Client
 setRequestTimeout = \client, requestTimeout -> { client & requestTimeout }
 
+## Set the provider order for the API requests. (Default: [] - use all providers.)
 setProviderOrder : Client, List Str -> Client
 setProviderOrder = \client, providerOrder -> 
     providerOrderOption = when providerOrder is
@@ -181,30 +194,39 @@ setProviderOrder = \client, providerOrder ->
         [..] -> Option.some providerOrder
     { client & providerOrder: providerOrderOption }
 
+## Set the temperature for the API requests. (Default: 1.0)
 setTemperature : Client, F32 -> Client
 setTemperature = \client, temperature -> { client & temperature }
 
+## Set the top_p for the API requests. (Default: 1.0)
 setTopP : Client, F32 -> Client
 setTopP = \client, topP -> { client & topP }
 
+## Set the top_k for the API requests. (Default: 0)
 setTopK : Client, U64 -> Client
 setTopK = \client, topK -> { client & topK }
 
+## Set the frequency penalty for the API requests. (Default: 0.0)
 setFrequencyPenalty : Client, F32 -> Client
 setFrequencyPenalty = \client, frequencyPenalty -> { client & frequencyPenalty }
 
+## Set the presence penalty for the API requests. (Default: 0.0)
 setPresencePenalty : Client, F32 -> Client
 setPresencePenalty = \client, presencePenalty -> { client & presencePenalty }
 
+## Set the repetition penalty for the API requests. (Default: 1.0)
 setRepetitionPenalty : Client, F32 -> Client
 setRepetitionPenalty = \client, repetitionPenalty -> { client & repetitionPenalty }
 
+## Set the min_p for the API requests. (Default: 0.0)
 setMinP : Client, F32 -> Client
 setMinP = \client, minP -> { client & minP }
 
+## Set the top_a for the API requests. (Default: 0.0)
 setTopA : Client, F32 -> Client
 setTopA = \client, topA -> { client & topA }
 
+## Set the seed for the API requests. (Default: 0 - random seed)
 setSeed : Client, U64 -> Client
 setSeed = \client, seed -> 
     seedOption = when seed is 
@@ -212,6 +234,7 @@ setSeed = \client, seed ->
         _ -> Option.some seed
     { client & seed: seedOption }
 
+## Set the max_tokens for the API requests. (Default: 0 - no limit)
 setMaxTokens : Client, U64 -> Client
 setMaxTokens = \client, maxTokens -> 
     maxTokensOption = when maxTokens is 
@@ -219,6 +242,7 @@ setMaxTokens = \client, maxTokens ->
         _ -> Option.some maxTokens
     { client & maxTokens: maxTokensOption }
 
+## Create a request object to be sent with basic-cli's Http.send
 createRequest : Client, List Message -> RequestObject
 createRequest = \client, messages -> 
     body = buildRequestBody client messages
@@ -231,6 +255,7 @@ createRequest = \client, messages ->
         timeout: client.requestTimeout,
     }
 
+## Build the request body to be sent in the Http request
 buildRequestBody : Client, List Message -> RequestBody
 buildRequestBody = \client, messages -> 
     {   
@@ -249,6 +274,7 @@ buildRequestBody = \client, messages ->
         provider: { order: client.providerOrder } 
     }
 
+## Decode the JSON response from the OpenRouter API
 decodeApiResponse : List U8 -> Result ApiResponse _
 decodeApiResponse = \bodyBytes -> 
     decoder = Json.utf8With { fieldNameMapping: SnakeCase }
@@ -256,6 +282,7 @@ decodeApiResponse = \bodyBytes ->
     decoded = Decode.fromBytesPartial bodyBytes decoder
     decoded.result
 
+## Decode the JSON error response from the OpenRouter API
 decodeErrorResponse : List U8 -> Result ErrorResponse _
 decodeErrorResponse = \bodyBytes -> 
     decoder = Json.utf8With { fieldNameMapping: SnakeCase }
@@ -263,6 +290,7 @@ decodeErrorResponse = \bodyBytes ->
     decoded = Decode.fromBytesPartial bodyBytes decoder
     decoded.result
 
+## Encode the request body to be sent in the Http request
 encodeRequestBody : RequestBody -> List U8
 encodeRequestBody = \body -> 
     Encode.toBytes body (Json.utf8With { 
@@ -270,11 +298,14 @@ encodeRequestBody = \body ->
         emptyEncodeAsNull: Json.encodeAsNullOption { record: Bool.false },
     })
 
+## Append a system message to the list of messages
 appendSystemMessage : List Message, Str -> List Message
 appendSystemMessage = \messages, content -> List.append messages { role: "system", content }
 
+## Append a user message to the list of messages
 appendUserMessage : List Message, Str -> List Message
 appendUserMessage = \messages, content -> List.append messages { role: "user", content }
 
+## Append an assistant message to the list of messages
 appendAssistantMessage : List Message, Str -> List Message
 appendAssistantMessage = \messages, content -> List.append messages { role: "assistant", content }
