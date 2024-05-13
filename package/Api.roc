@@ -19,7 +19,8 @@ module [
     setTopA,
     setSeed,
     setMaxTokens,
-    createRequest, 
+    buildChatRequest,
+    buildPromptRequest, 
     appendAssistantMessage, 
     appendSystemMessage, 
     appendUserMessage,
@@ -70,7 +71,8 @@ Message : {
 ## The structure of the request body to be sent in the Http request
 RequestBody : {
     model : Str,
-    messages: List Message,
+    messages: Option (List Message),
+    prompt: Option Str,
     temperature: F32,
     topA: F32,
     topP: F32,
@@ -242,10 +244,10 @@ setMaxTokens = \client, maxTokens ->
         _ -> Option.some maxTokens
     { client & maxTokens: maxTokensOption }
 
-## Create a request object to be sent with basic-cli's Http.send
-createRequest : Client, List Message -> RequestObject
-createRequest = \client, messages -> 
-    body = buildRequestBody client messages
+## Create a request object to be sent with basic-cli's Http.send using ChatML messages
+buildChatRequest : Client, List Message -> RequestObject
+buildChatRequest = \client, messages -> 
+    body = buildChatRequestBody client messages
     {
         method: Post, 
         headers: [Header "Authorization" "Bearer $(client.apiKey)"],
@@ -255,13 +257,47 @@ createRequest = \client, messages ->
         timeout: client.requestTimeout,
     }
 
-## Build the request body to be sent in the Http request
-buildRequestBody : Client, List Message -> RequestBody
-buildRequestBody = \client, messages -> 
+## Build the request body to be sent in the Http request using ChatML messages
+buildChatRequestBody : Client, List Message -> RequestBody
+buildChatRequestBody = \client, messages -> 
     {   
         model: client.model, 
-        messages, temperature: 
-        client.temperature,
+        messages: Option.some messages, 
+        prompt: Option.none {},
+        temperature: client.temperature,
+        topA: client.topA,
+        topP: client.topP,
+        topK: client.topK,
+        frequencyPenalty: client.frequencyPenalty,
+        presencePenalty: client.presencePenalty,
+        repetitionPenalty: client.repetitionPenalty,
+        minP: client.minP,
+        seed: client.seed,
+        maxTokens: client.maxTokens,
+        provider: { order: client.providerOrder } 
+    }
+
+## Create a request object to be sent with basic-cli's Http.send using a prompt string
+buildPromptRequest : Client, Str -> RequestObject
+buildPromptRequest = \client, prompt -> 
+    body = buildPromptRequestBody client prompt
+    {
+        method: Post,
+        headers: [Header "Authorization" "Bearer $(client.apiKey)"],
+        url: client.url,
+        mimeType: "application/json",
+        body: encodeRequestBody body,
+        timeout: client.requestTimeout,
+    }
+
+## Build the request body to be sent in the Http request using a prompt string
+buildPromptRequestBody : Client, Str -> RequestBody
+buildPromptRequestBody = \client, prompt -> 
+    {   
+        model: client.model, 
+        messages: Option.none {},
+        prompt: Option.some prompt,
+        temperature: client.temperature,
         topA: client.topA,
         topP: client.topP,
         topK: client.topK,

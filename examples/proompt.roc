@@ -21,7 +21,7 @@ main =
         |> AI.setTemperature 0.7
     query = "What is the meaning of life?"
     messages = initializeMessages |> AI.appendUserMessage query
-    request = AI.createRequest client messages
+    request = AI.buildChatRequest client messages
     response = Http.send! request
     responseBody =
         when response |> Http.handleStringResponse is
