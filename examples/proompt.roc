@@ -37,7 +37,8 @@ main =
             when AI.decodeErrorResponse responseBody is
                 Ok { error } -> Stdout.line error.message
                 Err _ -> Stdout.line "Failed to decode API response"
-            
+
+## Get the API key from the environmental variable
 getApiKey =
     keyResult <- Task.attempt (Env.var "OPENROUTER_API_KEY")
     when keyResult is
