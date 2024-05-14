@@ -10,7 +10,9 @@ This package is still in WIP stages, so the interface may be subject to change. 
 
 ## Example
 ```roc
-import Http
+import cli.Stdout
+import cli.Http
+import Cli.Task
 import ai.Api as AI
 
 main =
