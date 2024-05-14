@@ -4,8 +4,8 @@ This package is still in WIP stages, so the interface may be subject to change. 
 
 - Creating and parsing ChatML style requests and responses.
 - Creating and parsing raw prompt style requests and responses.
-- easy access to over 140 up-to-date models, plus additional older models
-- many most LLM parameters such as `temperature`, `topP`, topK, `repetitionPenalty`, etc.
+- Easy access to over 140 up-to-date models, plus additional older models.
+- Support for most common LLM parameters such as `temperature`, `topP`, topK, `repetitionPenalty`, etc.
 - OpenRouter specific features like provider preferences.
 
 ## Example
@@ -16,6 +16,7 @@ import cli.Task
 import ai.Api as AI
 
 main =
+    apiKey = "<your_api_key>"
     client = AI.init { apiKey }
     response = Http.send! (AI.buildChatRequest client [])
     messages = AI.appendUserMessage [] "Hello, world!"
@@ -29,5 +30,6 @@ main =
                 Ok choice -> Stdout.line choice.message
                 Err _ -> Stdout.line "Error getting first choice from API response"
         Err _ -> Stdout.line "Error decoding response body"
-    ```
-    For complete example apps, including a full chatbot app, see the examples folder.
+```
+
+For complete example apps, including a full chatbot app, see the examples folder.
