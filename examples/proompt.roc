@@ -19,7 +19,7 @@ main =
         |> AI.setTemperature 0.0
         |> AI.setTopP 1.0
         |> AI.setMaxTokens 8
-    query = "[INST] Hello, world!"
+    query = AI.formatLLamaPromptStr { prompt: "Hello, world!" }
     response = Http.send! (AI.buildPromptRequest client query)
     responseBody =
         when response |> Http.handleStringResponse is

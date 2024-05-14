@@ -27,6 +27,9 @@ module [
     decodeChatResponse,
     decodePromptResponse,
     decodeErrorResponse,
+    formatLLamaPromptStr,
+    formatLLamaPromptWithHistory,
+    updateLLamaChatHistory,
 ]
 
 import json.Json
@@ -375,6 +378,44 @@ encodeRequestBody = \body ->
         fieldNameMapping: SnakeCase, 
         emptyEncodeAsNull: Json.encodeAsNullOption { record: Bool.false },
     })
+
+llamaPromptStartTag = "[INST] "
+llamaPromptEndTag = " [/INST]"
+llamaSysMessageStartTag = "<<SYS>>\n"
+llamaSysMessageEndTag = "\n<<SYS>>\n\n"
+llamaExchangeStartTag = "<s>"
+llamaExchangeEndTag = "</s>\n"
+
+formatLLamaPromptStr : { prompt: Str, sysMessage? Str } -> Str
+formatLLamaPromptStr = \{ prompt, sysMessage? "" } -> 
+    when sysMessage is
+        "" -> 
+            llamaPromptStartTag
+            |> Str.append prompt
+            |> Str.append llamaPromptEndTag
+        _ -> 
+            llamaPromptStartTag
+            |> Str.append llamaSysMessageStartTag
+            |> Str.append sysMessage
+            |> Str.append llamaSysMessageEndTag
+            |> Str.append prompt
+            |> Str.append llamaPromptEndTag
+
+formatLLamaPromptWithHistory : Str, Str -> Str
+formatLLamaPromptWithHistory = \prompt, chatHistory -> 
+    chatHistory
+    |> Str.append llamaExchangeStartTag
+    |> Str.append prompt
+    
+updateLLamaChatHistory : { promptStr: Str, botReply: Str chatHistory? Str} -> Str
+updateLLamaChatHistory = \{ promptStr, botReply, chatHistory? "" } -> 
+    chatHistory
+    |> Str.append llamaExchangeStartTag
+    |> Str.append promptStr
+    |> Str.append botReply
+    |> Str.append llamaExchangeEndTag
+
+
 
 ## Append a system message to the list of messages
 appendSystemMessage : List Message, Str -> List Message
