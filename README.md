@@ -8,7 +8,7 @@ This package is still in WIP stages, so the interface may be subject to change. 
 - many most LLM parameters such as `temperature`, `topP`, topK, `repetitionPenalty`, etc.
 - OpenRouter specific features like provider preferences.
 
-## example
+## Example
 ```roc
 import Http
 import ai.Api as AI
@@ -27,3 +27,4 @@ when AI.decodeChatResponse responseBody is
             Err _ -> Stdout.line! "Error getting first choice from API response"
     Err _ -> Stdout.line! "Error decoding response body"
 ```
+For complete example apps, including a full chatbot app, see the examples folder.
