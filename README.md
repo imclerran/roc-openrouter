@@ -12,7 +12,7 @@ This package is still in WIP stages, so the interface may be subject to change. 
 ```roc
 import cli.Stdout
 import cli.Http
-import Cli.Task
+import cli.Task
 import ai.Api as AI
 
 main =
