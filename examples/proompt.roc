@@ -8,7 +8,7 @@ import cli.Stdout
 import cli.Http
 import cli.Task exposing [Task]
 import cli.Env
-import ai.Api as AI
+import ai.OpenRouter as AI
 
 main =
     apiKey = getApiKey!

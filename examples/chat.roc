@@ -4,7 +4,7 @@ app [main] {
     ai: "../package/main.roc",
 }
 
-import ai.Api as AI exposing [Message]
+import ai.OpenRouter as AI exposing [Message]
 import cli.Env
 import cli.Http
 import cli.Stdin
