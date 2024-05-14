@@ -19,11 +19,10 @@ main =
         AI.init { apiKey }
         |> AI.setModel model
         |> AI.setProviderOrder providers
-        |> AI.setTemperature 0.7
     Stdout.line! "Using model: $(model)\n"
     Stdout.line! "Enter your questions below, or type 'Goodbye' to exit"
     Task.loop! { client, previousMessages: initializeMessages } loop
-    Stdout.line "\nAssistant:  I have been a good chatbot. Goodbye! ^_^"
+    Stdout.line "\nAssistant:  I have been a good chatbot. Goodbye! 😊"
 
 ## The main loop for the chatbot
 loop = \{ client, previousMessages } ->
