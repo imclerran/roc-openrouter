@@ -14,7 +14,7 @@ This package is still in WIP stages, so the interface may be subject to change. 
 import cli.Stdout
 import cli.Http
 import cli.Task
-import ai.Api as AI
+import ai.OpenRouter as AI
 
 main =
     apiKey = "<your_api_key>"
