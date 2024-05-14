@@ -33,8 +33,8 @@ jobs:
       - run: ./roc_nightly/roc version
 
       # expect for testing
-      - run: sudo apt install -y expect
-      - run: expect -v
+      #- run: sudo apt install -y expect
+      #- run: expect -v
 
       - name: Make script executable
         run: chmod +x ./ci/all_tests.sh

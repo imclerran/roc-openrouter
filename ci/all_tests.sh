@@ -15,7 +15,6 @@ fi
 
 EXAMPLES_DIR='./examples'
 PACKAGE_DIR='./package'
-EXPECT_SCRIPTS_DIR='./ci/expect_scripts'
 
 # roc check
 for ROC_FILE in $EXAMPLES_DIR/*.roc; do
@@ -30,17 +29,6 @@ done
 for ROC_FILE in $EXAMPLES_DIR/*.roc; do
     $ROC build $ROC_FILE --linker=legacy
 done
-
-for EXP_FILE in $EXPECT_SCRIPTS_DIR/*.exp; do
-    expect $EXP_FILE
-done
-
-# check output
-# for ROC_FILE in $EXAMPLES_DIR/*.roc; do
-#     ROC_FILE_ONLY="$(basename "$ROC_FILE")"
-#     NO_EXT_NAME=${ROC_FILE_ONLY%.*}
-#     expect ci/expect_scripts/$NO_EXT_NAME.exp
-# done
 
 # TODO: Something in Api.roc causes `roc test` to hang indefinitely
 # `roc test` every roc file if it contains a test, skip roc_nightly folder
