@@ -33,20 +33,23 @@ loop = \{ client, previousMessages } ->
         "goodbye" -> Task.ok (Done { client, previousMessages: messages })
         "goodbye." -> Task.ok (Done { client, previousMessages: messages })
         "goodbye!" -> Task.ok (Done { client, previousMessages: messages })
+        _ -> handlePrompt client messages
+
+## Send the messages to the API, print the response, and return the updated messages in a Step
+handlePrompt = \client, messages ->
+    response = Http.send! (AI.buildChatRequest client messages)
+    updatedMessages = getMessagesFromResponse messages response
+    when List.last updatedMessages is
+        Ok { role, content } if role == "assistant" ->
+            Stdout.line! "\nAssistant: $(content)\n"
+            Task.ok (Step { client, previousMessages: updatedMessages })
+
+        Ok { role, content } if role == "system" ->
+            Stdout.line! "\nSystem: $(content)\n"
+            Task.ok (Step { client, previousMessages: updatedMessages })
+
         _ ->
-            response = Http.send! (AI.buildChatRequest client messages)
-            updatedMessages = getMessagesFromResponse messages response
-            when List.last updatedMessages is
-                Ok { role, content } if role == "assistant" ->
-                    Stdout.line! "\nAssistant: $(content)\n"
-                    Task.ok (Step { client, previousMessages: updatedMessages })
-
-                Ok { role, content } if role == "system" ->
-                    Stdout.line! "\nSystem: $(content)\n"
-                    Task.ok (Step { client, previousMessages: updatedMessages })
-
-                _ ->
-                    Task.ok (Step { client, previousMessages: updatedMessages })
+            Task.ok (Step { client, previousMessages: updatedMessages })
 
 ## decode the response from the OpenRouter API and append the first message to the list of messages
 getMessagesFromResponse : List Message, Http.Response -> List Message
