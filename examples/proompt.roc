@@ -17,19 +17,17 @@ main =
         |> AI.setModel "mistralai/mixtral-8x7b-instruct"
         |> AI.setProviderOrder ["Fireworks", "Together", "Lepton"]
         |> AI.setTemperature 0.7
-    messages =
-        initializeMessages
-        |> AI.appendUserMessage "What is the meaning of life?"
-    response = Http.send! (AI.buildChatRequest client messages)
+    query = "[INST] What is the meaning of life?"
+    response = Http.send! (AI.buildPromptRequest client query)
     responseBody =
         when response |> Http.handleStringResponse is
             Err err -> crash (Http.errorToString err)
             Ok body -> body |> Str.toUtf8
 
-    when AI.decodeApiResponse responseBody is
+    when AI.decodePromptResponse responseBody is
         Ok body ->
             when List.first body.choices is
-                Ok choice -> Stdout.line choice.message.content
+                Ok choice -> Stdout.line choice.text
                 Err _ -> Stdout.line "No choices found in API response"
 
         Err _ ->
@@ -43,12 +41,3 @@ getApiKey =
     when keyResult is
         Ok key -> Task.ok key
         Err VarNotFound -> crash "OPENROUTER_API_KEY environment variable not set"
-
-## Initialize the message list with a system message
-initializeMessages =
-    []
-    |> AI.appendSystemMessage
-        """
-        You are a helpful assistant, who answers questions in a concise and friendly manner. 
-        If you do not have knowledge about the on the users inquires about, you should politely tell them you cannot help.
-        """

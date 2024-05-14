@@ -1,5 +1,5 @@
 module [
-    ApiResponse, 
+    ChatResponse, 
     ErrorResponse,
     Client, 
     RequestObject, 
@@ -24,7 +24,8 @@ module [
     appendAssistantMessage, 
     appendSystemMessage, 
     appendUserMessage,
-    decodeApiResponse,
+    decodeChatResponse,
+    decodePromptResponse,
     decodeErrorResponse,
 ]
 
@@ -89,17 +90,31 @@ RequestBody : {
 }
 
 ## The structure of the JSON response from the OpenAI API
-ApiResponse : {
+ChatResponse : {
     id : Str,
     model : Str,
     object : Str,
-    created : I64,
+    created : U64,
     choices : List {
         index : U8,
         message : Message,
         finishReason : Str,
     },
     usage : {
+        promptTokens : U64,
+        completionTokens : U64,
+        totalTokens : U64,
+        totalCost : F32,
+    },
+}
+
+PromptResponse : {
+    id: Str,
+    model: Str,
+    object: Str,
+    created: U64,
+    choices: List { text: Str, finishReason: Str },
+    usage: {
         promptTokens : U64,
         completionTokens : U64,
         totalTokens : U64,
@@ -310,11 +325,19 @@ buildPromptRequestBody = \client, prompt ->
         provider: { order: client.providerOrder } 
     }
 
-## Decode the JSON response from the OpenRouter API
-decodeApiResponse : List U8 -> Result ApiResponse _
-decodeApiResponse = \bodyBytes -> 
+## Decode the JSON response to a ChatML style request
+decodeChatResponse : List U8 -> Result ChatResponse _
+decodeChatResponse = \bodyBytes -> 
     decoder = Json.utf8With { fieldNameMapping: SnakeCase }
-    decoded : Decode.DecodeResult ApiResponse
+    decoded : Decode.DecodeResult ChatResponse
+    decoded = Decode.fromBytesPartial bodyBytes decoder
+    decoded.result
+
+## Decode the JSON response to a prompt string request
+decodePromptResponse : List U8 -> Result PromptResponse _
+decodePromptResponse = \bodyBytes -> 
+    decoder = Json.utf8With { fieldNameMapping: SnakeCase }
+    decoded : Decode.DecodeResult PromptResponse
     decoded = Decode.fromBytesPartial bodyBytes decoder
     decoded.result
 

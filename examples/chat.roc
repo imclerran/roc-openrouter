@@ -56,7 +56,7 @@ getMessagesFromResponse = \messages, response ->
         when response |> Http.handleStringResponse is
             Err err -> crash (Http.errorToString err)
             Ok body -> body |> Str.toUtf8
-    when AI.decodeApiResponse responseBody is
+    when AI.decodeChatResponse responseBody is
         Ok body ->
             when List.get body.choices 0 is
                 Ok choice -> List.append messages choice.message
