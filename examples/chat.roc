@@ -14,11 +14,8 @@ import cli.Task exposing [Task]
 main =
     apiKey = getApiKey!
     model = getModelChoice!
-    providers = Dict.get preferredProviders model |> Result.withDefault []
-    client =
-        AI.init { apiKey }
-        |> AI.setModel model
-        |> AI.setProviderOrder providers
+    providerOrder = Dict.get preferredProviders model |> Result.withDefault []
+    client = AI.init { apiKey, model, providerOrder } 
     Stdout.line! "Using model: $(model)\n"
     Stdout.line! "Enter your questions below, or type 'Goodbye' to exit"
     Task.loop! { client, previousMessages: initializeMessages } loop
