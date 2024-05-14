@@ -1,5 +1,7 @@
 # Roc package for the OpenRouter.ai API
 
+[![Roc-Lang][roc_badge]][roc_link]
+
 This package is still in WIP stages, so the interface may be subject to change. With that said, the package currently supports:
 
 - Creating and parsing ChatML style requests and responses.
@@ -34,3 +36,6 @@ main =
 ```
 
 For complete example apps, including a full chatbot app, see the examples folder.
+
+[roc_badge]: https://img.shields.io/endpoint?url=https%3A%2F%2Fpastebin.com%2Fraw%2FGcfjHKzb
+[roc_link]: https://github.com/roc-lang/roc
