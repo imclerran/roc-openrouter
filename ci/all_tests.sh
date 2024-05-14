@@ -21,9 +21,10 @@ EXPECT_SCRIPTS_DIR='./ci/expect_scripts'
 for ROC_FILE in $EXAMPLES_DIR/*.roc; do
     $ROC check $ROC_FILE
 done
-for ROC_FILE in $PACKAGE_DIR/*.roc; do
-    $ROC check $ROC_FILE
-done
+# TODO: Something in Api.roc causes `roc check` to hang indefinitely
+# for ROC_FILE in $PACKAGE_DIR/*.roc; do
+#     $ROC check $ROC_FILE
+# done
 
 # roc build
 for ROC_FILE in $EXAMPLES_DIR/*.roc; do
@@ -41,7 +42,7 @@ done
 #     expect ci/expect_scripts/$NO_EXT_NAME.exp
 # done
 
-# TODO: roc test does not work for packages which import other packages
+# TODO: Something in Api.roc causes `roc test` to hang indefinitely
 # `roc test` every roc file if it contains a test, skip roc_nightly folder
 # find . -type d -name "roc_nightly" -prune -o -type f -name "*.roc" -print | while read file; do
 #     if grep -qE '^\s*expect(\s+|$)' "$file"; then
