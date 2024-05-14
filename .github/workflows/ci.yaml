@@ -36,5 +36,8 @@ jobs:
       - run: sudo apt install -y expect
       - run: expect -v
 
+      - name: Make script executable
+        run: chmod +x ./ci/all_tests.sh
+
       # run all tests 
       - run: ROC=./roc_nightly/roc ./ci/all_tests.sh
