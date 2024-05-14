@@ -190,6 +190,25 @@ init = \{
     |> setSeed seed
     |> setMaxTokens maxTokens
 
+# expect
+#     init { apiKey: "test" } == {
+#         apiKey: "test",
+#         model: defaultModel,
+#         url: defaultUrl,
+#         requestTimeout: NoTimeout,
+#         providerOrder: Option.none {},
+#         temperature: 1.0,
+#         topP: 1.0,
+#         topK: 0,
+#         frequencyPenalty: 0.0,
+#         presencePenalty: 0.0,
+#         repetitionPenalty: 1.0,
+#         minP: 0.0,
+#         topA: 0.0,
+#         seed: Option.none {},
+#         maxTokens: Option.none {},
+#     }
+
 ## Set the model to be used for the API requests.
 setModel : Client, Str -> Client
 setModel = \client, model -> { client & model }

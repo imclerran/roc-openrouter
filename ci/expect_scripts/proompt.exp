@@ -1,0 +1,38 @@
+#!/usr/bin/expect
+
+# uncomment line below for debugging
+# exp_internal 1
+
+set timeout 15
+spawn ./examples/proompt
+
+expect {
+    timeout { puts "Timeout occurred"; exit 1 }
+    -re {I'm a helpful AI assistant\.} {
+        puts "Program finished successfully"; exit 0
+    }
+    -re {I am a helpful assistant\.} {
+        puts "Program finished successfully"; exit 0
+    }
+    -re {I'm learning how to write Python} {
+        puts "Program finished successfully"; exit 0
+    }
+    -re {I'm learning how to code in} {
+        puts "Program finished successfully"; exit 0
+    }
+    -re {How can I help you today\?} {
+        puts "Program finished successfully"; exit 0
+    }
+    timeout {
+        puts "Timeout occurred"; exit 1
+    }
+}
+
+# Check the return code of the program
+if {[wait] != 0} {
+    puts "Program returned non-zero exit code"
+    exit 1
+} else {
+    puts "Program returned zero exit code"
+    exit 0
+}

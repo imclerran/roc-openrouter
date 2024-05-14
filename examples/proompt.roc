@@ -16,8 +16,10 @@ main =
         AI.init { apiKey }
         |> AI.setModel "mistralai/mixtral-8x7b-instruct"
         |> AI.setProviderOrder ["Fireworks", "Together", "Lepton"]
-        |> AI.setTemperature 0.7
-    query = "[INST] What is the meaning of life?"
+        |> AI.setTemperature 0.0
+        |> AI.setTopP 1.0
+        |> AI.setMaxTokens 8
+    query = "[INST] Hello, world!"
     response = Http.send! (AI.buildPromptRequest client query)
     responseBody =
         when response |> Http.handleStringResponse is
@@ -27,7 +29,7 @@ main =
     when AI.decodePromptResponse responseBody is
         Ok body ->
             when List.first body.choices is
-                Ok choice -> Stdout.line choice.text
+                Ok choice -> Stdout.line (choice.text |> Str.trim)
                 Err _ -> Stdout.line "No choices found in API response"
 
         Err _ ->
