@@ -391,29 +391,29 @@ formatLLamaPromptStr = \{ prompt, sysMessage? "" } ->
     when sysMessage is
         "" -> 
             llamaPromptStartTag
-            |> Str.append prompt
-            |> Str.append llamaPromptEndTag
+            |> Str.concat prompt
+            |> Str.concat llamaPromptEndTag
         _ -> 
             llamaPromptStartTag
-            |> Str.append llamaSysMessageStartTag
-            |> Str.append sysMessage
-            |> Str.append llamaSysMessageEndTag
-            |> Str.append prompt
-            |> Str.append llamaPromptEndTag
+            |> Str.concat llamaSysMessageStartTag
+            |> Str.concat sysMessage
+            |> Str.concat llamaSysMessageEndTag
+            |> Str.concat prompt
+            |> Str.concat llamaPromptEndTag
 
 formatLLamaPromptWithHistory : Str, Str -> Str
 formatLLamaPromptWithHistory = \prompt, chatHistory -> 
     chatHistory
-    |> Str.append llamaExchangeStartTag
-    |> Str.append prompt
+    |> Str.concat llamaExchangeStartTag
+    |> Str.concat prompt
     
-updateLLamaChatHistory : { promptStr: Str, botReply: Str chatHistory? Str} -> Str
+updateLLamaChatHistory : { promptStr: Str, botReply: Str, chatHistory? Str} -> Str
 updateLLamaChatHistory = \{ promptStr, botReply, chatHistory? "" } -> 
     chatHistory
-    |> Str.append llamaExchangeStartTag
-    |> Str.append promptStr
-    |> Str.append botReply
-    |> Str.append llamaExchangeEndTag
+    |> Str.concat llamaExchangeStartTag
+    |> Str.concat promptStr
+    |> Str.concat botReply
+    |> Str.concat llamaExchangeEndTag
 
 
 
