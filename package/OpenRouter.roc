@@ -107,7 +107,6 @@ ChatResponse : {
         promptTokens : U64,
         completionTokens : U64,
         totalTokens : U64,
-        totalCost : F32,
     },
 }
 
@@ -121,7 +120,6 @@ PromptResponse : {
         promptTokens : U64,
         completionTokens : U64,
         totalTokens : U64,
-        totalCost : F32,
     },
 }
 
@@ -350,26 +348,35 @@ buildPromptRequestBody = \client, prompt ->
 ## Decode the JSON response to a ChatML style request
 decodeChatResponse : List U8 -> Result ChatResponse _
 decodeChatResponse = \bodyBytes -> 
+    cleanedBody = dropLeadingGarbage bodyBytes
     decoder = Json.utf8With { fieldNameMapping: SnakeCase }
     decoded : Decode.DecodeResult ChatResponse
-    decoded = Decode.fromBytesPartial bodyBytes decoder
+    decoded = Decode.fromBytesPartial cleanedBody decoder
     decoded.result
 
 ## Decode the JSON response to a prompt string request
 decodePromptResponse : List U8 -> Result PromptResponse _
 decodePromptResponse = \bodyBytes -> 
+    cleanedBody = dropLeadingGarbage bodyBytes
     decoder = Json.utf8With { fieldNameMapping: SnakeCase }
     decoded : Decode.DecodeResult PromptResponse
-    decoded = Decode.fromBytesPartial bodyBytes decoder
+    decoded = Decode.fromBytesPartial cleanedBody decoder
     decoded.result
 
 ## Decode the JSON error response from the OpenRouter API
 decodeErrorResponse : List U8 -> Result ErrorResponse _
 decodeErrorResponse = \bodyBytes -> 
+    cleanedBody = dropLeadingGarbage bodyBytes
     decoder = Json.utf8With { fieldNameMapping: SnakeCase }
     decoded : Decode.DecodeResult ErrorResponse
-    decoded = Decode.fromBytesPartial bodyBytes decoder
+    decoded = Decode.fromBytesPartial cleanedBody decoder
     decoded.result
+
+dropLeadingGarbage : List U8 -> List U8
+dropLeadingGarbage = \bytes -> 
+    when List.findFirstIndex bytes \elem -> elem == '{' is
+        Ok idx -> List.dropFirst bytes idx
+        Err _ -> bytes 
 
 ## Encode the request body to be sent in the Http request
 encodeRequestBody : RequestBody -> List U8
@@ -414,8 +421,6 @@ updateLLamaChatHistory = \{ promptStr, botReply, chatHistory? "" } ->
     |> Str.concat promptStr
     |> Str.concat botReply
     |> Str.concat llamaExchangeEndTag
-
-
 
 ## Append a system message to the list of messages
 appendSystemMessage : List Message, Str -> List Message
