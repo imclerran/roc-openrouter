@@ -19,6 +19,9 @@ module [
     setTopA,
     setSeed,
     setMaxTokens,
+    setResponseFormat,
+    setModels,
+    setRoute,
     buildChatRequest,
     buildPromptRequest, 
     appendAssistantMessage, 
@@ -54,6 +57,9 @@ Client : {
     topA: F32,
     seed: Option U64,
     maxTokens: Option U64,
+    responseFormat : Option { type: Str },
+    models : Option (List Str),
+    route : Option Str,
 }
 
 ## The request object to be sent with basic-cli's Http.send 
@@ -90,6 +96,9 @@ RequestBody : {
     provider: {
         order: Option (List Str),
     },
+    # responseFormat: Option { type: Str },
+    models: Option (List Str),
+    route: Option Str,
 }
 
 ## The structure of the JSON response from the OpenAI API
@@ -152,6 +161,9 @@ init : {
         topA ? F32,
         seed ? U64,
         maxTokens ? U64,
+        responseFormat ? Str,
+        models ? List Str,
+        route ? [Fallback, NoFallback],
     } -> Client
 init = \{
         apiKey,
@@ -169,6 +181,9 @@ init = \{
         topA ? 0.0,
         seed ? 0,
         maxTokens ? 0,
+        responseFormat ? "",
+        models ? [],
+        route ? NoFallback,
     } -> 
     { 
         apiKey, 
@@ -186,10 +201,16 @@ init = \{
         topA,
         seed: Option.none {},
         maxTokens: Option.none {},
+        responseFormat: Option.none {},
+        models: Option.none {},
+        route: Option.none {},
     }
     |> setProviderOrder providerOrder
     |> setSeed seed
     |> setMaxTokens maxTokens
+    |> setResponseFormat responseFormat
+    |> setModels models
+    |> setRoute route
 
 # expect
 #     init { apiKey: "test" } == {
@@ -279,6 +300,27 @@ setMaxTokens = \client, maxTokens ->
         _ -> Option.some maxTokens
     { client & maxTokens: maxTokensOption }
 
+setResponseFormat : Client, Str -> Client
+setResponseFormat = \client, responseFormat -> 
+    responseFormatOption = if Str.isEmpty responseFormat 
+        then Option.none {}
+        else Option.some { type: responseFormat }
+    { client & responseFormat: responseFormatOption }
+
+setModels : Client, List Str -> Client
+setModels = \client, models -> 
+    modelsOption = if List.isEmpty models 
+        then Option.none {}
+        else Option.some models
+    { client & models: modelsOption }
+
+setRoute : Client, [Fallback, NoFallback] -> Client
+setRoute = \client, route ->
+    routeOption = when route is
+        NoFallback -> Option.none {}
+        Fallback -> Option.some "fallback"
+    { client & route: routeOption }
+
 ## Create a request object to be sent with basic-cli's Http.send using ChatML messages
 buildChatRequest : Client, List Message -> RequestObject
 buildChatRequest = \client, messages -> 
@@ -309,7 +351,10 @@ buildChatRequestBody = \client, messages ->
         minP: client.minP,
         seed: client.seed,
         maxTokens: client.maxTokens,
-        provider: { order: client.providerOrder } 
+        provider: { order: client.providerOrder },
+        # responseFormat: client.responseFormat,
+        models: client.models,
+        route: client.route,
     }
 
 ## Create a request object to be sent with basic-cli's Http.send using a prompt string
@@ -342,7 +387,10 @@ buildPromptRequestBody = \client, prompt ->
         minP: client.minP,
         seed: client.seed,
         maxTokens: client.maxTokens,
-        provider: { order: client.providerOrder } 
+        provider: { order: client.providerOrder },
+        # responseFormat: client.responseFormat,
+        models: client.models,
+        route: client.route,
     }
 
 ## Decode the JSON response to a ChatML style request
