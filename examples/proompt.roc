@@ -8,32 +8,33 @@ import cli.Stdout
 import cli.Http
 import cli.Task exposing [Task]
 import cli.Env
-import ai.OpenRouter as AI
+import ai.Api as Api
+import ai.Client
 
 main =
     apiKey = getApiKey!
     client =
-        AI.init { apiKey }
-        |> AI.setModel "mistralai/mixtral-8x7b-instruct"
-        |> AI.setProviderOrder ["Fireworks", "Together", "Lepton"]
-        |> AI.setTemperature 0.0
-        |> AI.setTopP 1.0
-        |> AI.setMaxTokens 8
-    query = AI.formatLLamaPromptStr { prompt: "Hello, world!" }
-    response = Http.send! (AI.buildPromptRequest client query)
+        Client.init { apiKey }
+        |> Client.setModel "mistralai/mixtral-8x7b-instruct"
+        |> Client.setProviderOrder ["Fireworks", "Together", "Lepton"]
+        |> Client.setTemperature 0.0
+        |> Client.setTopP 1.0
+        |> Client.setMaxTokens 8
+    query = Api.formatLLamaPromptStr { prompt: "Hello, world!" }
+    response = Http.send! (Api.buildPromptRequest client query)
     responseBody =
         when response |> Http.handleStringResponse is
             Err err -> crash (Http.errorToString err)
             Ok body -> body |> Str.toUtf8
 
-    when AI.decodePromptResponse responseBody is
+    when Api.decodePromptResponse responseBody is
         Ok body ->
             when List.first body.choices is
                 Ok choice -> Stdout.line (choice.text |> Str.trim)
                 Err _ -> Stdout.line "No choices found in API response"
 
         Err _ ->
-            when AI.decodeErrorResponse responseBody is
+            when Api.decodeErrorResponse responseBody is
                 Ok { error } -> Stdout.line error.message
                 Err _ -> Stdout.line "Failed to decode API response"
 

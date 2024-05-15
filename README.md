@@ -21,18 +21,18 @@ This package is still in WIP 🛠️ stages, so the interface may be subject to 
 import cli.Stdout
 import cli.Http
 import cli.Task
-import ai.OpenRouter as AI
+import ai.Api
 
 main =
     apiKey = "<your_api_key>"
-    client = AI.init { apiKey }
-    response = Http.send! (AI.buildChatRequest client [])
-    messages = AI.appendUserMessage [] "Hello, world!"
+    client = Api.initClient { apiKey }
+    response = Http.send! (Api.buildChatRequest client [])
+    messages = Api.appendUserMessage [] "Hello, world!"
     responseBody =
         when response |> Http.handleStringResponse is
             Err err -> crash (Http.errorToString err)
             Ok body -> body |> Str.toUtf8
-    when AI.decodeChatResponse responseBody is
+    when Api.decodeChatResponse responseBody is
         Ok body ->
             when List.get body.choices 0 is
                 Ok choice -> Stdout.line choice.message

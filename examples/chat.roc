@@ -4,7 +4,7 @@ app [main] {
     ai: "../package/main.roc",
 }
 
-import ai.OpenRouter as AI exposing [Message]
+import ai.Api exposing [Message]
 import cli.Env
 import cli.Http
 import cli.Stdin
@@ -15,7 +15,7 @@ main =
     apiKey = getApiKey!
     model = getModelChoice!
     providerOrder = Dict.get preferredProviders model |> Result.withDefault []
-    client = AI.init { apiKey, model, providerOrder } 
+    client = Api.initClient { apiKey, model, providerOrder } 
     Stdout.line! "Using model: $(model)\n"
     Stdout.line! "Enter your questions below, or type 'Goodbye' to exit"
     Task.loop! { client, previousMessages: initializeMessages } loop
@@ -25,7 +25,7 @@ main =
 loop = \{ client, previousMessages } ->
     Stdout.write! "You: "
     query = Stdin.line!
-    messages = AI.appendUserMessage previousMessages query
+    messages = Api.appendUserMessage previousMessages query
     when query |> strToLower is
         "goodbye" -> Task.ok (Done { client, previousMessages: messages })
         "goodbye." -> Task.ok (Done { client, previousMessages: messages })
@@ -34,7 +34,7 @@ loop = \{ client, previousMessages } ->
 
 ## Send the messages to the API, print the response, and return the updated messages in a Step
 handlePrompt = \client, messages ->
-    response = Http.send! (AI.buildChatRequest client messages)
+    response = Http.send! (Api.buildChatRequest client messages)
     updatedMessages = getMessagesFromResponse messages response
     when List.last updatedMessages is
         Ok { role, content } if role == "assistant" ->
@@ -55,16 +55,16 @@ getMessagesFromResponse = \messages, response ->
         when response |> Http.handleStringResponse is
             Err err -> crash (Http.errorToString err)
             Ok body -> body |> Str.toUtf8
-    when AI.decodeChatResponse responseBody is
+    when Api.decodeChatResponse responseBody is
         Ok body ->
             when List.get body.choices 0 is
                 Ok choice -> List.append messages choice.message
-                Err _ -> AI.appendSystemMessage messages "Error getting first choice from API response"
+                Err _ -> Api.appendSystemMessage messages "Error getting first choice from API response"
 
         Err _ ->
-            when AI.decodeErrorResponse responseBody is
-                Ok { error } -> AI.appendSystemMessage messages error.message
-                Err _ -> AI.appendSystemMessage messages "Error decoding API response"
+            when Api.decodeErrorResponse responseBody is
+                Ok { error } -> Api.appendSystemMessage messages error.message
+                Err _ -> Api.appendSystemMessage messages "Error decoding API response"
 
 ## Get the API key from the environmental variable
 getApiKey =
@@ -85,7 +85,7 @@ getModelChoice =
 ## Initialize the message list with a system message
 initializeMessages =
     []
-    |> AI.appendSystemMessage
+    |> Api.appendSystemMessage
         """
         You are a helpful assistant, who answers questions in a concise and friendly manner. 
         If you do not have knowledge about the on the users inquires about, you should politely tell them you cannot help.
