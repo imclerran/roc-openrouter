@@ -11,7 +11,7 @@ This package is still in WIP 🛠️ stages, so the interface may be subject to 
 - Most common LLM parameters such as `temperature`, `topP`, `topK`, `repetitionPenalty`, etc.
 - OpenRouter specific features like provider preferences.
 
-## Coming soon 🚀
+## Coming (maybe not so) soon 🚀
 
 - LLM tool use! 🔨🔧🪛⛏️🪓
   - Blocked on [support for Dict type in EncoderFormatting](https://github.com/roc-lang/roc/issues/#5294)
