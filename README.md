@@ -2,7 +2,7 @@
 
 [![Roc-Lang][roc_badge]][roc_link]
 
-This package is still in WIP stages, so the interface may be subject to change. With that said, the package currently supports:
+This package is still in WIP 🛠️ stages, so the interface may be subject to change. With that said, the package currently supports:
 
 - Creating and parsing ChatML style requests and responses.
 - Creating and parsing raw prompt style requests and responses.
@@ -10,6 +10,10 @@ This package is still in WIP stages, so the interface may be subject to change. 
 - Easy access to over 140 up-to-date models, plus additional older models.
 - Most common LLM parameters such as `temperature`, `topP`, `topK`, `repetitionPenalty`, etc.
 - OpenRouter specific features like provider preferences.
+
+## Coming soon 🚀
+
+- LLM tool use! 🔨🔧🪛⛏️🪓
 
 ## Example
 ```roc
