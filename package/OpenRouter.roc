@@ -19,7 +19,7 @@ module [
     setTopA,
     setSeed,
     setMaxTokens,
-    setResponseFormat,
+    # setResponseFormat,
     setModels,
     setRoute,
     buildChatRequest,
@@ -57,7 +57,7 @@ Client : {
     topA: F32,
     seed: Option U64,
     maxTokens: Option U64,
-    responseFormat : Option { type: Str },
+    # responseFormat : Option { type: Str },
     models : Option (List Str),
     route : Option Str,
 }
@@ -161,7 +161,7 @@ init : {
         topA ? F32,
         seed ? U64,
         maxTokens ? U64,
-        responseFormat ? Str,
+        # responseFormat ? Str,
         models ? List Str,
         route ? [Fallback, NoFallback],
     } -> Client
@@ -181,7 +181,7 @@ init = \{
         topA ? 0.0,
         seed ? 0,
         maxTokens ? 0,
-        responseFormat ? "",
+        # responseFormat ? "",
         models ? [],
         route ? NoFallback,
     } -> 
@@ -201,14 +201,14 @@ init = \{
         topA,
         seed: Option.none {},
         maxTokens: Option.none {},
-        responseFormat: Option.none {},
+        # responseFormat: Option.none {},
         models: Option.none {},
         route: Option.none {},
     }
     |> setProviderOrder providerOrder
     |> setSeed seed
     |> setMaxTokens maxTokens
-    |> setResponseFormat responseFormat
+    # |> setResponseFormat responseFormat
     |> setModels models
     |> setRoute route
 
@@ -300,12 +300,12 @@ setMaxTokens = \client, maxTokens ->
         _ -> Option.some maxTokens
     { client & maxTokens: maxTokensOption }
 
-setResponseFormat : Client, Str -> Client
-setResponseFormat = \client, responseFormat -> 
-    responseFormatOption = if Str.isEmpty responseFormat 
-        then Option.none {}
-        else Option.some { type: responseFormat }
-    { client & responseFormat: responseFormatOption }
+# setResponseFormat : Client, Str -> Client
+# setResponseFormat = \client, responseFormat -> 
+#     responseFormatOption = if Str.isEmpty responseFormat 
+#         then Option.none {}
+#         else Option.some { type: responseFormat }
+#     { client & responseFormat: responseFormatOption }
 
 setModels : Client, List Str -> Client
 setModels = \client, models -> 
