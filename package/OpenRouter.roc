@@ -4,6 +4,8 @@ module [
     Client, 
     RequestObject, 
     Message,
+    Tool,
+    FunctionParameter,
     init,
     setModel,
     setProviderOrder,
@@ -19,6 +21,7 @@ module [
     setTopA,
     setSeed,
     setMaxTokens,
+    setTools,
     buildChatRequest,
     buildPromptRequest, 
     appendAssistantMessage, 
@@ -30,6 +33,8 @@ module [
     formatLLamaPromptStr,
     formatLLamaPromptWithHistory,
     updateLLamaChatHistory,
+    initializeTool,
+    addToolParameter,
 ]
 
 import json.Json
@@ -54,6 +59,8 @@ Client : {
     topA: F32,
     seed: Option U64,
     maxTokens: Option U64,
+    tools: Option (List Tool),
+    toolChoice: Str,
 }
 
 ## The request object to be sent with basic-cli's Http.send 
@@ -90,6 +97,8 @@ RequestBody : {
     provider: {
         order: Option (List Str),
     },
+    tools: Option (List Tool),
+    toolChoice: Str,
 }
 
 ## The structure of the JSON response from the OpenAI API
@@ -131,6 +140,57 @@ ErrorResponse : {
     },
 }
 
+Tool : {
+    type : Str,
+    function: {
+        name: Str,
+        description: Str,
+        parameters: {
+            type: Str,
+            properties: Dict Str FunctionParameter,
+        },
+        required: List Str,     
+    }
+}
+
+FunctionParameter : {
+    type : Str,
+    description : Str,
+}
+
+initializeTool : Str, Str -> Tool
+initializeTool = \functionName, functionDescription -> {
+    type: "function",
+    function: {
+        name: functionName,
+        description: functionDescription,
+        parameters: {
+            type: "object",
+            properties: Dict.empty {},
+        },
+        required: [],
+    },
+}
+
+addToolParameter : Tool, Str, FunctionParameter, [Required, NotRequired] -> Tool
+addToolParameter = \tool, paramName, parameter, isRequired -> 
+    properties = tool.function.parameters.properties |> Dict.insert paramName parameter 
+    required = when isRequired is
+        Required -> List.append tool.function.required paramName
+        NotRequired -> tool.function.required
+    {
+        type: "function",
+        function: {
+            name: tool.function.name,
+            description: tool.function.description,
+            parameters: {
+                type: "object",
+                properties,
+            },
+            required,
+        },
+    }
+
 defaultModel = "openrouter/auto"
 defaultUrl = "https://openrouter.ai/api/v1/chat/completions"
 
@@ -152,6 +212,8 @@ init : {
         topA ? F32,
         seed ? U64,
         maxTokens ? U64,
+        tools ? List Tool,
+        toolChoice ? Str,
     } -> Client
 init = \{
         apiKey,
@@ -169,6 +231,8 @@ init = \{
         topA ? 0.0,
         seed ? 0,
         maxTokens ? 0,
+        tools ? [],
+        toolChoice ? "auto"
     } -> 
     { 
         apiKey, 
@@ -186,10 +250,13 @@ init = \{
         topA,
         seed: Option.none {},
         maxTokens: Option.none {},
+        tools: Option.none {},
+        toolChoice,
     }
     |> setProviderOrder providerOrder
     |> setSeed seed
     |> setMaxTokens maxTokens
+    |> setTools tools
 
 # expect
 #     init { apiKey: "test" } == {
@@ -211,6 +278,7 @@ init = \{
 #     }
 
 ## Set the model to be used for the API requests.
+## Default: "openrouter/auto"
 setModel : Client, Str -> Client
 setModel = \client, model -> { client & model }
 
@@ -220,10 +288,12 @@ setUrl : Client, Str -> Client
 setUrl = \client, url -> { client & url }
 
 ## Set the request timeout for the API requests.
+## Default: NoTimeout
 setRequestTimeout : Client, TimeoutConfig -> Client
 setRequestTimeout = \client, requestTimeout -> { client & requestTimeout }
 
-## Set the provider order for the API requests. (Default: [] - use all providers.)
+## Set the provider order for the API requests. 
+## Default: [] - use all providers.
 setProviderOrder : Client, List Str -> Client
 setProviderOrder = \client, providerOrder -> 
     providerOrderOption = when providerOrder is
@@ -231,39 +301,57 @@ setProviderOrder = \client, providerOrder ->
         [..] -> Option.some providerOrder
     { client & providerOrder: providerOrderOption }
 
-## Set the temperature for the API requests. (Default: 1.0)
+## Set the temperature for the API requests. 
+## Range: [0.0, 2.0]
+## Default: 1.0
 setTemperature : Client, F32 -> Client
 setTemperature = \client, temperature -> { client & temperature }
 
-## Set the top_p for the API requests. (Default: 1.0)
+## Set the top_p for the API requests. 
+## Range: [0.0, 1.0]
+## Default: 1.0
 setTopP : Client, F32 -> Client
 setTopP = \client, topP -> { client & topP }
 
-## Set the top_k for the API requests. (Default: 0)
+## Set the top_k for the API requests. 
+## Range: [0, Num.maxU64]
+## Default: 0
 setTopK : Client, U64 -> Client
 setTopK = \client, topK -> { client & topK }
 
-## Set the frequency penalty for the API requests. (Default: 0.0)
+## Set the frequency penalty for the API requests. 
+## Range: [-2.0, 2.0]
+## Default: 0.0
 setFrequencyPenalty : Client, F32 -> Client
 setFrequencyPenalty = \client, frequencyPenalty -> { client & frequencyPenalty }
 
-## Set the presence penalty for the API requests. (Default: 0.0)
+## Set the presence penalty for the API requests. 
+## Range: [-2.0, 2.0]
+## Default: 0.0
 setPresencePenalty : Client, F32 -> Client
 setPresencePenalty = \client, presencePenalty -> { client & presencePenalty }
 
-## Set the repetition penalty for the API requests. (Default: 1.0)
+## Set the repetition penalty for the API requests. 
+## Range: [0.0, 2.0]
+## Default: 1.0
 setRepetitionPenalty : Client, F32 -> Client
 setRepetitionPenalty = \client, repetitionPenalty -> { client & repetitionPenalty }
 
-## Set the min_p for the API requests. (Default: 0.0)
+## Set the min_p for the API requests. 
+## Range: [0.0, 1.0]
+## Default: 0.0
 setMinP : Client, F32 -> Client
 setMinP = \client, minP -> { client & minP }
 
-## Set the top_a for the API requests. (Default: 0.0)
+## Set the top_a for the API requests. 
+## Range: [0.0, 1.0]
+## Default: 0.0
 setTopA : Client, F32 -> Client
 setTopA = \client, topA -> { client & topA }
 
-## Set the seed for the API requests. (Default: 0 - random seed)
+## Set the seed for the API requests. 
+## OpenAI models only
+## Default: 0 - random seed
 setSeed : Client, U64 -> Client
 setSeed = \client, seed -> 
     seedOption = when seed is 
@@ -271,13 +359,24 @@ setSeed = \client, seed ->
         _ -> Option.some seed
     { client & seed: seedOption }
 
-## Set the max_tokens for the API requests. (Default: 0 - no limit)
+## Set the max_tokens for the API requests. 
+## Range: [1, contextLength]
+## Default: 0 == no limit
 setMaxTokens : Client, U64 -> Client
 setMaxTokens = \client, maxTokens -> 
     maxTokensOption = when maxTokens is 
         0 -> Option.none {}
         _ -> Option.some maxTokens
     { client & maxTokens: maxTokensOption }
+
+## Set the list of tools available for the LLM to use.
+## Default: []
+setTools : Client, List Tool -> Client
+setTools = \client, tools -> 
+    toolsOption = when tools is
+        [] -> Option.none {}
+        [..] -> Option.some tools
+    { client & tools: toolsOption }
 
 ## Create a request object to be sent with basic-cli's Http.send using ChatML messages
 buildChatRequest : Client, List Message -> RequestObject
@@ -309,7 +408,9 @@ buildChatRequestBody = \client, messages ->
         minP: client.minP,
         seed: client.seed,
         maxTokens: client.maxTokens,
-        provider: { order: client.providerOrder } 
+        provider: { order: client.providerOrder },
+        tools: client.tools,
+        toolChoice: client.toolChoice,
     }
 
 ## Create a request object to be sent with basic-cli's Http.send using a prompt string
@@ -342,7 +443,9 @@ buildPromptRequestBody = \client, prompt ->
         minP: client.minP,
         seed: client.seed,
         maxTokens: client.maxTokens,
-        provider: { order: client.providerOrder } 
+        provider: { order: client.providerOrder },
+        tools: client.tools,
+        toolChoice: client.toolChoice,
     }
 
 ## Decode the JSON response to a ChatML style request
