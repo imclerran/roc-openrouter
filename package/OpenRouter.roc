@@ -307,6 +307,10 @@ setMaxTokens = \client, maxTokens ->
 #         else Option.some { type: responseFormat }
 #     { client & responseFormat: responseFormatOption }
 
+# Set the models for the auto router to choose from.
+# If not set, the auto router will choose from a small selection of the top performing models.
+# https://openrouter.ai/models/openrouter/auto
+## Default: []
 setModels : Client, List Str -> Client
 setModels = \client, models -> 
     modelsOption = if List.isEmpty models 
