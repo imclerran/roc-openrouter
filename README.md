@@ -14,6 +14,7 @@ This package is still in WIP 🛠️ stages, so the interface may be subject to 
 ## Coming soon 🚀
 
 - LLM tool use! 🔨🔧🪛⛏️🪓
+  - Blocked on [support for Dict type in EncoderFormatting](https://github.com/roc-lang/roc/issues/6752)
 
 ## Example
 ```roc
