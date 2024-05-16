@@ -6,6 +6,7 @@ module [
     decodeErrorResponse, 
     decodeErrorResponse, 
     decodeResponse, 
+    decodeResponseToFirstText,
     encodeRequestBody, 
     formatLLamaPrompt, 
     formatLLamaPromptWithHistory, 
