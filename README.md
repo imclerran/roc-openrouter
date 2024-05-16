@@ -26,8 +26,8 @@ import ai.Chat
 main =
     apiKey = "<your_api_key>"
     client = Chat.initClient { apiKey }
-    response = Http.send! (Chat.buildRequest client [])
     messages = Chat.appendUserMessage [] "Hello, world!"
+    response = Http.send! (Chat.buildRequest client messages)
     responseBody =
         when response |> Http.handleStringResponse is
             Err err -> crash (Http.errorToString err)
