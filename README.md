@@ -28,12 +28,9 @@ main =
     client = Chat.initClient { apiKey }
     messages = Chat.appendUserMessage [] "Hello, world!"
     response = Http.send! (Chat.buildRequest client messages)
-    when Chat.decodeResponse response.body is
-        Ok body ->
-            when List.get body.choices 0 is
-                Ok choice -> Stdout.line choice.message
-                Err _ -> Stdout.line "Error getting first choice from API response"
-        Err _ -> Stdout.line "Error decoding response body"
+    when Chat.decodeResponseToFirstMessage response.body is
+        Ok message -> Stdout.line message.content
+        Err _ -> Stdout.line "Error decoding API response"
 ```
 
 For complete example apps, including a full chatbot app, see the examples folder.
