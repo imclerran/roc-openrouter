@@ -21,18 +21,18 @@ This package is still in WIP 🛠️ stages, so the interface may be subject to 
 import cli.Stdout
 import cli.Http
 import cli.Task
-import ai.Api
+import ai.Chat
 
 main =
     apiKey = "<your_api_key>"
-    client = Api.initClient { apiKey }
-    response = Http.send! (Api.buildChatRequest client [])
-    messages = Api.appendUserMessage [] "Hello, world!"
+    client = Chat.initClient { apiKey }
+    response = Http.send! (Chat.buildRequest client [])
+    messages = Chat.appendUserMessage [] "Hello, world!"
     responseBody =
         when response |> Http.handleStringResponse is
             Err err -> crash (Http.errorToString err)
             Ok body -> body |> Str.toUtf8
-    when Api.decodeChatResponse responseBody is
+    when Chat.decodeResponse responseBody is
         Ok body ->
             when List.get body.choices 0 is
                 Ok choice -> Stdout.line choice.message
