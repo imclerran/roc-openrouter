@@ -8,7 +8,7 @@ import cli.Stdout
 import cli.Http
 import cli.Task exposing [Task]
 import cli.Env
-import ai.Api as Api
+import ai.Prompt
 import ai.Client
 
 main =
@@ -20,21 +20,21 @@ main =
         |> Client.setTemperature 0.0
         |> Client.setTopP 1.0
         |> Client.setMaxTokens 8
-    query = Api.formatLLamaPromptStr { prompt: "Hello, world!" }
-    response = Http.send! (Api.buildPromptRequest client query)
+    query = Prompt.formatLLamaPrompt { prompt: "Hello, computer!" }
+    response = Http.send! (Prompt.buildHttpRequest client query)
     responseBody =
         when response |> Http.handleStringResponse is
             Err err -> crash (Http.errorToString err)
             Ok body -> body |> Str.toUtf8
 
-    when Api.decodePromptResponse responseBody is
+    when Prompt.decodeResponse responseBody is
         Ok body ->
             when List.first body.choices is
                 Ok choice -> Stdout.line (choice.text |> Str.trim)
                 Err _ -> Stdout.line "No choices found in API response"
 
         Err _ ->
-            when Api.decodeErrorResponse responseBody is
+            when Prompt.decodeErrorResponse responseBody is
                 Ok { error } -> Stdout.line error.message
                 Err _ -> Stdout.line "Failed to decode API response"
 
