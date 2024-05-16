@@ -9,7 +9,7 @@ This package is still in WIP 🛠️ stages, so the interface may be subject to 
 - Formatting prompt strings with `[INST]`, `<<SYS>>`, and `<s>` tags for models with llama style fine-tuning.
 - Easy access to over 140 up-to-date models, plus additional older models.
 - Most common LLM parameters such as `temperature`, `topP`, `topK`, `repetitionPenalty`, etc.
-- OpenRouter specific features like provider preferences.
+- OpenRouter specific features like fallback models and provider preferences.
 
 ## Coming (maybe not so) soon 🚀
 
