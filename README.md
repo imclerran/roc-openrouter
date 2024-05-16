@@ -28,7 +28,7 @@ main =
     client = Chat.initClient { apiKey, model: "openai/gpt-4o" }
     messages = Chat.appendUserMessage [] "Hello, world!"
     response = Http.send! (Chat.buildRequest client messages)
-    when Chat.decodeResponseToFirstMessage response.body is
+    when Chat.decodeTopMessageChoice response.body is
         Ok message -> Stdout.line message.content
         Err _ -> Stdout.line "Error decoding API response"
 ```

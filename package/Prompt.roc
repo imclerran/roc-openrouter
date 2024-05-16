@@ -6,7 +6,7 @@ module [
     decodeErrorResponse, 
     decodeErrorResponse, 
     decodeResponse, 
-    decodeResponseToFirstText,
+    decodeTopTextChoice,
     encodeRequestBody, 
     formatLLamaPrompt, 
     formatLLamaPromptWithHistory, 
@@ -113,9 +113,9 @@ decodeResponse = \bodyBytes ->
     decoded.result
 
 ## Decode the JSON response body to the first message in the list of choices
-decodeResponseToFirstText : List U8 -> Result Message [InvalidResponse, NoChoices]
-decodeResponseToFirstText = \bodyBytes -> 
-    when decodeResponse bodyBytes is
+decodeTopTextChoice : List U8 -> Result Str [InvalidResponse, NoChoices]
+decodeTopTextChoice = \responseBodyBytes -> 
+    when decodeResponse responseBodyBytes is
         Ok body -> 
             when List.get body.choices 0 is
                 Ok choice -> Ok choice.text

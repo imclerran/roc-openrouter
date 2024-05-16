@@ -9,7 +9,7 @@ module [
     buildRequestBody,
     decodeErrorResponse,
     decodeResponse,
-    decodeResponseToFirstMessage,
+    decodeTopMessageChoice,
     encodeRequestBody,
     initClient,
 ]
@@ -115,9 +115,9 @@ decodeResponse = \bodyBytes ->
     decoded.result
 
 ## Decode the JSON response body to the first message in the list of choices
-decodeResponseToFirstMessage : List U8 -> Result Message [InvalidResponse, NoChoices]
-decodeResponseToFirstMessage = \bodyBytes -> 
-    when decodeResponse bodyBytes is
+decodeTopMessageChoice : List U8 -> Result Message [InvalidResponse, NoChoices]
+decodeTopMessageChoice = \responseBodyBytes -> 
+    when decodeResponse responseBodyBytes is
         Ok body -> 
             when List.get body.choices 0 is
                 Ok choice -> Ok choice.message

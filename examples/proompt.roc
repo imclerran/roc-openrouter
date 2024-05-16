@@ -22,16 +22,12 @@ main =
         |> Client.setMaxTokens 8
     query = Prompt.formatLLamaPrompt { prompt: "Hello, computer!" }
     response = Http.send! (Prompt.buildHttpRequest client query)
-    when Prompt.decodeResponse response.body is
-        Ok body ->
-            when List.first body.choices is
-                Ok choice -> Stdout.line (choice.text |> Str.trim)
-                Err _ -> Stdout.line "No choices found in API response"
-
-        Err _ ->
-            when Prompt.decodeErrorResponse response.body is
-                Ok { error } -> Stdout.line error.message
-                Err _ -> Stdout.line "Failed to decode API response"
+    when Prompt.decodeTopTextChoice response.body is
+        Ok text -> Stdout.line (text |> Str.trim)
+        Err NoChoices -> Stdout.line "No choices found in API response"
+        Err InvalidResponse -> when Prompt.decodeErrorResponse response.body is
+            Ok { error } -> Stdout.line error.message
+            Err _ -> Stdout.line "Failed to decode API response"
 
 ## Get the API key from the environmental variable
 getApiKey =
