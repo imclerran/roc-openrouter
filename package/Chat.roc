@@ -115,13 +115,13 @@ decodeResponse = \bodyBytes ->
     decoded.result
 
 ## Decode the JSON response body to the first message in the list of choices
-decodeResponseToFirstMessage : List U8 -> Result Message [InvalidResponse, NoMessageChoices]
+decodeResponseToFirstMessage : List U8 -> Result Message [InvalidResponse, NoChoices]
 decodeResponseToFirstMessage = \bodyBytes -> 
     when decodeResponse bodyBytes is
         Ok body -> 
             when List.get body.choices 0 is
                 Ok choice -> Ok choice.message
-                Err _ -> Err NoMessageChoices
+                Err _ -> Err NoChoices
         Err _ -> Err InvalidResponse
 
 ## Decode the JSON response body of an API error message
