@@ -15,7 +15,7 @@ module [
     setTopA,
     setSeed,
     setMaxTokens,
-    # setResponseFormat,
+    setResponseFormat,
     setModels,
     setRoute,
     defaultModel,
@@ -23,8 +23,7 @@ module [
 ]
 
 import json.Option exposing [Option]
-
-TimeoutConfig : [TimeoutMilliseconds U64, NoTimeout]
+import Shared exposing [TimeoutConfig]
 
 ## The record used to store configuration for the OpenRouter API client.
 Client : {
@@ -43,7 +42,7 @@ Client : {
     topA: F32,
     seed: Option U64,
     maxTokens: Option U64,
-    # responseFormat : Option { type: Str },
+    responseFormat : { type: Str },
     models : Option (List Str),
     route : Option Str,
 }
@@ -69,7 +68,7 @@ init : {
         topA ? F32,
         seed ? U64,
         maxTokens ? U64,
-        # responseFormat ? Str,
+        responseFormat ? Str,
         models ? List Str,
         route ? [Fallback, NoFallback],
     } -> Client
@@ -89,7 +88,7 @@ init = \{
         topA ? 0.0,
         seed ? 0,
         maxTokens ? 0,
-        # responseFormat ? "",
+        responseFormat ? "text",
         models ? [],
         route ? NoFallback,
     } -> 
@@ -109,14 +108,13 @@ init = \{
         topA,
         seed: Option.none {},
         maxTokens: Option.none {},
-        # responseFormat: Option.none {},
+        responseFormat: { type: responseFormat },
         models: Option.none {},
         route: Option.none {},
     }
     |> setProviderOrder providerOrder
     |> setSeed seed
     |> setMaxTokens maxTokens
-    # |> setResponseFormat responseFormat
     |> setModels models
     |> setRoute route
 
@@ -213,12 +211,12 @@ setMaxTokens = \client, maxTokens ->
         _ -> Option.some maxTokens
     { client & maxTokens: maxTokensOption }
 
-# setResponseFormat : Client, Str -> Client
-# setResponseFormat = \client, responseFormat -> 
-#     responseFormatOption = if Str.isEmpty responseFormat 
-#         then Option.none {}
-#         else Option.some { type: responseFormat }
-#     { client & responseFormat: responseFormatOption }
+## Set the response format to either "text" or "json_object". Not supported by all models.
+## Default: "" - no format
+setResponseFormat : Client, Str -> Client
+setResponseFormat = \client, responseFormat -> 
+    responseFormatRecord = { type: responseFormat }
+    { client & responseFormat: responseFormatRecord }
 
 ## Set the models for the auto router to choose from.
 ## If not set, the auto router will choose from a small selection of the top performing models.
