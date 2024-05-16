@@ -22,19 +22,14 @@ main =
         |> Client.setMaxTokens 8
     query = Prompt.formatLLamaPrompt { prompt: "Hello, computer!" }
     response = Http.send! (Prompt.buildHttpRequest client query)
-    responseBody =
-        when response |> Http.handleStringResponse is
-            Err err -> crash (Http.errorToString err)
-            Ok body -> body |> Str.toUtf8
-
-    when Prompt.decodeResponse responseBody is
+    when Prompt.decodeResponse response.body is
         Ok body ->
             when List.first body.choices is
                 Ok choice -> Stdout.line (choice.text |> Str.trim)
                 Err _ -> Stdout.line "No choices found in API response"
 
         Err _ ->
-            when Prompt.decodeErrorResponse responseBody is
+            when Prompt.decodeErrorResponse response.body is
                 Ok { error } -> Stdout.line error.message
                 Err _ -> Stdout.line "Failed to decode API response"
 

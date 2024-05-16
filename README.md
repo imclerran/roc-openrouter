@@ -28,11 +28,7 @@ main =
     client = Chat.initClient { apiKey }
     messages = Chat.appendUserMessage [] "Hello, world!"
     response = Http.send! (Chat.buildRequest client messages)
-    responseBody =
-        when response |> Http.handleStringResponse is
-            Err err -> crash (Http.errorToString err)
-            Ok body -> body |> Str.toUtf8
-    when Chat.decodeResponse responseBody is
+    when Chat.decodeResponse response.body is
         Ok body ->
             when List.get body.choices 0 is
                 Ok choice -> Stdout.line choice.message
