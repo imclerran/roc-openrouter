@@ -114,6 +114,7 @@ decodeResponse = \bodyBytes ->
     decoded = Decode.fromBytesPartial cleanedBody decoder
     decoded.result
 
+## Decode the JSON response body to the first message in the list of choices
 decodeResponseToFirstMessage : List U8 -> Result Message [BadBytes, BadList]
 decodeResponseToFirstMessage = \bodyBytes -> 
     when decodeResponse bodyBytes is
