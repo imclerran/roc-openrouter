@@ -9,6 +9,7 @@ module [
     buildRequestBody,
     decodeErrorResponse,
     decodeResponse,
+    decodeResponseToFirstMessage,
     encodeRequestBody,
     initClient,
 ]
@@ -112,6 +113,15 @@ decodeResponse = \bodyBytes ->
     decoded : Decode.DecodeResult ChatResponseBody
     decoded = Decode.fromBytesPartial cleanedBody decoder
     decoded.result
+
+decodeResponseToFirstMessage : List U8 -> Result Message [BadBytes, BadList]
+decodeResponseToFirstMessage = \bodyBytes -> 
+    when decodeResponse bodyBytes is
+        Ok body -> 
+            when List.get body.choices 0 is
+                Ok choice -> Ok choice.message
+                Err _ -> Err BadList
+        Err _ -> Err BadBytes
 
 ## Decode the JSON response body of an API error message
 decodeErrorResponse = Shared.decodeErrorResponse
