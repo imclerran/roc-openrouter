@@ -51,18 +51,14 @@ handlePrompt = \client, messages ->
 ## decode the response from the OpenRouter API and append the first message to the list of messages
 getMessagesFromResponse : List Message, Http.Response -> List Message
 getMessagesFromResponse = \messages, response ->
-    responseBody =
-        when response |> Http.handleStringResponse is
-            Err err -> crash (Http.errorToString err)
-            Ok body -> body |> Str.toUtf8
-    when Chat.decodeResponse responseBody is
+    when Chat.decodeResponse response.body is
         Ok body ->
             when List.get body.choices 0 is
                 Ok choice -> List.append messages choice.message
                 Err _ -> Chat.appendSystemMessage messages "Error getting first choice from API response"
 
         Err _ ->
-            when Chat.decodeErrorResponse responseBody is
+            when Chat.decodeErrorResponse response.body is
                 Ok { error } -> Chat.appendSystemMessage messages error.message
                 Err _ -> Chat.appendSystemMessage messages "Error decoding API response"
 
