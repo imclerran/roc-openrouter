@@ -25,7 +25,7 @@ import ai.Chat
 
 main =
     apiKey = "<your_api_key>"
-    client = Chat.initClient { apiKey }
+    client = Chat.initClient { apiKey, model: "openai/gpt-4o" }
     messages = Chat.appendUserMessage [] "Hello, world!"
     response = Http.send! (Chat.buildRequest client messages)
     when Chat.decodeResponseToFirstMessage response.body is
