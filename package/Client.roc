@@ -70,7 +70,7 @@ init : {
         maxTokens ? U64,
         responseFormat ? Str,
         models ? List Str,
-        route ? [Fallback, NoFallback],
+        route ? [UseFallback, NoFallback],
     } -> Client
 init = \{
         apiKey,
@@ -234,9 +234,9 @@ setModels = \client, models ->
 ## will try a similarly priced model to the primary.
 ## https://openrouter.ai/docs#model-routing
 ## Default: NoFallback
-setRoute : Client, [Fallback, NoFallback] -> Client
+setRoute : Client, [UseFallback, NoFallback] -> Client
 setRoute = \client, route ->
     routeOption = when route is
         NoFallback -> Option.none {}
-        Fallback -> Option.some "fallback"
+        UseFallback -> Option.some "fallback"
     { client & route: routeOption }
