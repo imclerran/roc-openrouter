@@ -17,7 +17,7 @@ module [
 import json.Json
 import json.Option exposing [Option]
 
-import Shared exposing [RequestObject, dropLeadingGarbage]
+import Shared exposing [RequestObject, ApiError, dropLeadingGarbage]
 import Client exposing [Client]
 
 ## The OpenAI ChatML standard message used to query the AI model.
@@ -115,14 +115,16 @@ decodeResponse = \bodyBytes ->
     decoded.result
 
 ## Decode the JSON response body to the first message in the list of choices
-decodeTopMessageChoice : List U8 -> Result Message [InvalidResponse, NoChoices]
+decodeTopMessageChoice : List U8 -> Result Message [HttpError ApiError, InvalidResponse, NoChoices]
 decodeTopMessageChoice = \responseBodyBytes -> 
     when decodeResponse responseBodyBytes is
         Ok body -> 
             when List.get body.choices 0 is
                 Ok choice -> Ok choice.message
                 Err _ -> Err NoChoices
-        Err _ -> Err InvalidResponse
+        Err _ -> when Shared.decodeErrorResponse responseBodyBytes is
+            Ok err -> Err (HttpError err.error)
+            Err _ -> Err InvalidResponse
 
 ## Decode the JSON response body of an API error message
 decodeErrorResponse = Shared.decodeErrorResponse

@@ -24,10 +24,9 @@ main =
     response = Http.send! (Prompt.buildHttpRequest client query)
     when Prompt.decodeTopTextChoice response.body is
         Ok text -> Stdout.line (text |> Str.trim)
+        Err (HttpError error) -> Stdout.line error.message
         Err NoChoices -> Stdout.line "No choices found in API response"
-        Err InvalidResponse -> when Prompt.decodeErrorResponse response.body is
-            Ok { error } -> Stdout.line error.message
-            Err _ -> Stdout.line "Failed to decode API response"
+        Err InvalidResponse -> Stdout.line "Invalid API response"
 
 ## Get the API key from the environmental variable
 getApiKey =

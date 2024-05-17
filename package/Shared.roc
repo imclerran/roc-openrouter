@@ -1,4 +1,4 @@
-module [TimeoutConfig, ErrorResponse, RequestObject, ResponseFormat, dropLeadingGarbage, decodeErrorResponse]
+module [ApiError, TimeoutConfig, ErrorResponse, RequestObject, ResponseFormat, dropLeadingGarbage, decodeErrorResponse]
 
 import json.Json
 
@@ -17,15 +17,16 @@ RequestObject : {
 
 ## The structure of the JSON error response from the OpenAI API
 ErrorResponse : {
-    error : {
-        code : U16,
-        message : Str,
-    },
+    error: ApiError,
+}
+
+ApiError : {
+    code : U16,
+    message : Str,
 }
 
 ResponseFormat : {
     type: Str,
-    #extra: U8, # This field only to avoid a compiler bug which occurs when for a record holding a single string
 }
 
 ## Drop leading garbage characters from the response body

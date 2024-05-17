@@ -18,7 +18,7 @@ import json.Json
 import json.Option exposing [Option]
 
 import Client exposing [Client]
-import Shared exposing [RequestObject]
+import Shared exposing [RequestObject, ApiError]
 
 ## The structure of the request body to be sent in the Http request
 PromptRequestBody : {
@@ -113,14 +113,16 @@ decodeResponse = \bodyBytes ->
     decoded.result
 
 ## Decode the JSON response body to the first message in the list of choices
-decodeTopTextChoice : List U8 -> Result Str [InvalidResponse, NoChoices]
+decodeTopTextChoice : List U8 -> Result Str [HttpError ApiError, InvalidResponse, NoChoices]
 decodeTopTextChoice = \responseBodyBytes -> 
     when decodeResponse responseBodyBytes is
         Ok body -> 
             when List.get body.choices 0 is
                 Ok choice -> Ok choice.text
                 Err _ -> Err NoChoices
-        Err _ -> Err InvalidResponse
+        Err _ -> when decodeErrorResponse responseBodyBytes is
+            Ok err -> Err (HttpError err.error)
+            Err _ -> Err InvalidResponse
 
 ## Decode the JSON response body of an API error message
 decodeErrorResponse = Shared.decodeErrorResponse
