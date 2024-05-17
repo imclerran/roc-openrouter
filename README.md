@@ -30,6 +30,7 @@ main =
     response = Http.send! (Chat.buildRequest client messages)
     when Chat.decodeTopMessageChoice response.body is
         Ok message -> Stdout.line message.content
+        Err (HttpError err) -> Stdout.line err.message
         Err _ -> Stdout.line "Error decoding API response"
 ```
 
