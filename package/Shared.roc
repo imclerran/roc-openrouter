@@ -20,11 +20,13 @@ ErrorResponse : {
     error: ApiError,
 }
 
+## The API error status code and description
 ApiError : {
     code : U16,
     message : Str,
 }
 
+## Tells the LLM how to respond to the user. Should be either "text" or "json_object"
 ResponseFormat : {
     type: Str,
 }
