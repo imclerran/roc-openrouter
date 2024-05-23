@@ -19,7 +19,7 @@ main =
     Stdout.line! "Using model: $(model)\n"
     Stdout.line! "Enter your questions below, or type 'Goodbye' to exit"
     Task.loop! { client, previousMessages: initializeMessages } loop
-    Stdout.line "\nAssistant:  I have been a good chatbot. Goodbye! 😊"
+    Stdout.line (colorizeRole (Assistant "\nAssistant:  I have been a good chatbot. Goodbye! 😊"))
 
 ## The main loop for the chatbot
 loop = \{ client, previousMessages } ->
@@ -38,11 +38,11 @@ handlePrompt = \client, messages ->
     updatedMessages = getMessagesFromResponse messages response
     when List.last updatedMessages is
         Ok { role, content } if role == "assistant" ->
-            Stdout.line! "\nAssistant: $(content)\n"
+            Stdout.line! (colorizeRole (Assistant "\nAssistant: $(content)\n"))
             Task.ok (Step { client, previousMessages: updatedMessages })
 
         Ok { role, content } if role == "system" ->
-            Stdout.line! "\nSystem: $(content)\n"
+            Stdout.line! (colorizeRole (System "\nSystem: $(content)\n"))
             Task.ok (Step { client, previousMessages: updatedMessages })
 
         _ ->
@@ -129,3 +129,10 @@ strToLower = \str ->
         acc |> List.append (if elem >= 65 && elem <= 90 then elem + 32 else elem)
     |> Str.fromUtf8
     |> Result.withDefault str
+
+colorizeRole : [Assistant Str, System Str, User Str] -> Str
+colorizeRole = \role ->
+    when role is
+        Assistant msg -> "\u(001b)[35m$(msg)\u(001b)[0m"
+        System msg -> "\u(001b)[34m$(msg)\u(001b)[0m"
+        User msg -> "\u(001b)[0m$(msg)\u(001b)[0m"
