@@ -1,22 +1,23 @@
 app [main] {
-    cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.10.0/vNe6s9hWzoTZtFmNkvEICPErI9ptji_ySjicO6CkucY.tar.br",
-    json: "https://github.com/lukewilliamboswell/roc-json/releases/download/0.10.0/KbIfTNbxShRX1A1FgXei1SpO5Jn8sgP6HP6PXbi-xyA.tar.br",
+    cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.15.0/SlwdbJ-3GR7uBWQo6zlmYWNYOxnvo8r6YABXD-45UOw.tar.br",
+    ansi: "https://github.com/lukewilliamboswell/roc-ansi/releases/download/0.6/tzLZlg6lNmgU4uYtQ_zCmSr1AptHxZ8VBfE-O9JCudw.tar.br",
+    json: "https://github.com/lukewilliamboswell/roc-json/releases/download/0.10.2/FH4N0Sw-JSFXJfG3j54VEDPtXOoN-6I9v_IA8S18IGk.tar.br",
     ai: "../package/main.roc",
 }
 
 import ai.Chat exposing [Message]
+import ansi.Core as Ansi
 import cli.Env
 import cli.Http
 import cli.Stdin
 import cli.Stdout
-import cli.Task exposing [Task]
 
 main =
     apiKey = getApiKey!
     model = getModelChoice!
     providerOrder = Dict.get preferredProviders model |> Result.withDefault []
-    client = Chat.initClient { apiKey, model, providerOrder } 
-    Stdout.line! "Using model: $(model)\n"
+    client = Chat.initClient { apiKey, model, providerOrder }
+    Stdout.line! "Using model: $(model |> Ansi.color { fg: Standard Magenta })\n"
     Stdout.line! "Enter your questions below, or type 'Goodbye' to exit"
     Task.loop! { client, previousMessages: initializeMessages } loop
     Stdout.line (colorizeRole (Assistant "\nAssistant:  I have been a good chatbot. Goodbye! 😊"))
@@ -27,9 +28,9 @@ loop = \{ client, previousMessages } ->
     query = Stdin.line!
     messages = Chat.appendUserMessage previousMessages query
     when query |> strToLower is
-        "goodbye" -> Task.ok (Done { client, previousMessages: messages })
-        "goodbye." -> Task.ok (Done { client, previousMessages: messages })
-        "goodbye!" -> Task.ok (Done { client, previousMessages: messages })
+        "goodbye" -> Task.ok (Done {})
+        "goodbye." -> Task.ok (Done {})
+        "goodbye!" -> Task.ok (Done {})
         _ -> handlePrompt client messages
 
 ## Send the messages to the API, print the response, and return the updated messages in a Step
@@ -51,26 +52,33 @@ handlePrompt = \client, messages ->
 ## decode the response from the OpenRouter API and append the first message to the list of messages
 getMessagesFromResponse : List Message, Http.Response -> List Message
 getMessagesFromResponse = \messages, response ->
-    when Chat.decodeTopMessageChoice response.body is 
+    when Chat.decodeTopMessageChoice response.body is
         Ok message -> List.append messages message
-        Err (HttpError err) -> Chat.appendSystemMessage messages err.message
+        Err (BadJson str) -> Chat.appendSystemMessage messages str
         Err _ -> Chat.appendSystemMessage messages "Error decoding API response"
 
 ## Get the API key from the environmental variable
 getApiKey =
-    keyResult <- Task.attempt (Env.var "OPENROUTER_API_KEY")
-    when keyResult is
-        Ok key -> Task.ok key
-        Err VarNotFound -> crash "OPENROUTER_API_KEY environment variable not set"
+    Task.attempt (Env.var "OPENROUTER_API_KEY") \keyResult ->
+        when keyResult is
+            Ok key -> Task.ok key
+            Err VarNotFound -> crash "OPENROUTER_API_KEY environment variable not set"
 
 ## Prompt the user to choose a model and return the selected model
 getModelChoice : Task Str _
 getModelChoice =
-    Stdout.line! modelMenuString
-    Stdout.write! "Choose a model (or press enter): "
-    choiceStr <- Stdin.line |> Task.map
-    Dict.get modelChoices choiceStr
-    |> Result.withDefault defaultModel
+    Task.loop {} \{} ->
+        Stdout.line! modelMenuString
+        Stdout.write! "Choose a model (or press enter): "
+        choiceStr = Stdin.line!
+        if Dict.contains modelChoices choiceStr then
+            Dict.get modelChoices choiceStr
+            |> Result.withDefault defaultModel
+            |> Done
+            |> Task.ok
+        else
+            "Oops! Invalid model choice.\n" |> Ansi.color { fg: Standard Yellow } |> Stdout.line!
+            Task.ok (Step {})
 
 ## Initialize the message list with a system message
 initializeMessages =
@@ -133,6 +141,6 @@ strToLower = \str ->
 colorizeRole : [Assistant Str, System Str, User Str] -> Str
 colorizeRole = \role ->
     when role is
-        Assistant msg -> "\u(001b)[35m$(msg)\u(001b)[0m"
-        System msg -> "\u(001b)[34m$(msg)\u(001b)[0m"
-        User msg -> "\u(001b)[0m$(msg)\u(001b)[0m"
+        Assistant msg -> msg |> Ansi.color { fg: Standard Magenta }
+        System msg -> msg |> Ansi.color { fg: Standard Blue }
+        User msg -> msg |> Ansi.color { fg: Standard White }

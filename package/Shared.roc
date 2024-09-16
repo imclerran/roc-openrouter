@@ -8,7 +8,7 @@ TimeoutConfig : [TimeoutMilliseconds U64, NoTimeout]
 ## The request object to be sent with basic-cli's Http.send 
 RequestObject : {
     method : [Post],
-    headers : List [Header Str Str],
+    headers : List { key: Str, value: Str },
     mimeType : Str,
     url : Str,
     body : List U8,

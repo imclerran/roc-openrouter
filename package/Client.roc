@@ -72,19 +72,19 @@ init : {
         models ? List Str,
         route ? [UseFallback, NoFallback],
     } -> Client
-init = \{
-        apiKey,
-        model ? defaultModel,
-        url ? defaultUrl,
-        requestTimeout ? NoTimeout,
-        providerOrder ? [],
-        temperature ? 1.0,
-        topP ? 1.0,
-        topK ? 0,
-        frequencyPenalty ? 0.0,
-        presencePenalty ? 0.0,
-        repetitionPenalty ? 1.0,
-        minP ? 0.0,
+init = \{ 
+        apiKey, 
+        model ? defaultModel, 
+        url ? defaultUrl, 
+        requestTimeout ? NoTimeout, 
+        providerOrder ? [], 
+        temperature ? 1.0, 
+        topP ? 1.0, 
+        topK ? 0, 
+        frequencyPenalty ? 0.0, 
+        presencePenalty ? 0.0, 
+        repetitionPenalty ? 1.0, 
+        minP ? 0.0, 
         topA ? 0.0,
         seed ? 0,
         maxTokens ? 0,
@@ -92,31 +92,31 @@ init = \{
         models ? [],
         route ? NoFallback,
     } -> 
-    { 
-        apiKey, 
-        model, 
-        url, 
-        requestTimeout, 
-        providerOrder: Option.none {}, 
-        temperature, 
-        topP,
-        topK,
-        frequencyPenalty,
-        presencePenalty,
-        repetitionPenalty,
-        minP,
-        topA,
-        seed: Option.none {},
-        maxTokens: Option.none {},
-        responseFormat: { type: responseFormat },
-        models: Option.none {},
-        route: Option.none {},
-    }
-    |> setProviderOrder providerOrder
-    |> setSeed seed
-    |> setMaxTokens maxTokens
-    |> setModels models
-    |> setRoute route
+        { 
+            apiKey, 
+            model, 
+            url, 
+            requestTimeout, 
+            providerOrder: Option.none {}, 
+            temperature, 
+            topP,
+            topK,
+            frequencyPenalty,
+            presencePenalty,
+            repetitionPenalty,
+            minP,
+            topA,
+            seed: Option.none {},
+            maxTokens: Option.none {},
+            responseFormat: { type: responseFormat },
+            models: Option.none {},
+            route: Option.none {},
+        }
+        |> setProviderOrder providerOrder
+        |> setSeed seed
+        |> setMaxTokens maxTokens
+        |> setModels models
+        |> setRoute route
 
 
 ## Set the model to be used for the API requests.

@@ -1,12 +1,12 @@
 app [main] {
-    cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.10.0/vNe6s9hWzoTZtFmNkvEICPErI9ptji_ySjicO6CkucY.tar.br",
-    json: "https://github.com/lukewilliamboswell/roc-json/releases/download/0.10.0/KbIfTNbxShRX1A1FgXei1SpO5Jn8sgP6HP6PXbi-xyA.tar.br",
+    cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.15.0/SlwdbJ-3GR7uBWQo6zlmYWNYOxnvo8r6YABXD-45UOw.tar.br",
+    # cli: platform "../../basic-cli/platform/main.roc"
+    json: "https://github.com/lukewilliamboswell/roc-json/releases/download/0.10.2/FH4N0Sw-JSFXJfG3j54VEDPtXOoN-6I9v_IA8S18IGk.tar.br",
     ai: "../package/main.roc",
 }
 
 import cli.Stdout
 import cli.Http
-import cli.Task exposing [Task]
 import cli.Env
 import ai.Prompt
 import ai.Client
@@ -30,7 +30,7 @@ main =
 
 ## Get the API key from the environmental variable
 getApiKey =
-    keyResult <- Task.attempt (Env.var "OPENROUTER_API_KEY")
-    when keyResult is
-        Ok key -> Task.ok key
-        Err VarNotFound -> crash "OPENROUTER_API_KEY environment variable not set"
+    Task.attempt (Env.var "OPENROUTER_API_KEY") \keyResult ->
+        when keyResult is
+            Ok key -> Task.ok key
+            Err VarNotFound -> crash "OPENROUTER_API_KEY environment variable not set"

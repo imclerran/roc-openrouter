@@ -57,7 +57,7 @@ ChatResponseBody : {
     choices : List {
         index : U8,
         message : Message,
-        finishReason : Str,
+        #finishReason : Str, # finish reason is not always returned by some models, causing json decoding errors
     },
     usage : {
         promptTokens : U64,
@@ -76,7 +76,7 @@ buildHttpRequest = \client, messages ->
     body = buildRequestBody client messages
     {
         method: Post, 
-        headers: [Header "Authorization" "Bearer $(client.apiKey)"],
+        headers: [{ key: "Authorization", value: "Bearer $(client.apiKey)" }],
         url: client.url,
         mimeType: "application/json",
         body: encodeRequestBody body,
@@ -115,7 +115,7 @@ decodeResponse = \bodyBytes ->
     decoded.result
 
 ## Decode the JSON response body to the first message in the list of choices
-decodeTopMessageChoice : List U8 -> Result Message [HttpError ApiError, InvalidResponse, NoChoices]
+decodeTopMessageChoice : List U8 -> Result Message [HttpError ApiError, InvalidResponse, NoChoices, BadJson Str]
 decodeTopMessageChoice = \responseBodyBytes -> 
     when decodeResponse responseBodyBytes is
         Ok body -> 
@@ -124,7 +124,10 @@ decodeTopMessageChoice = \responseBodyBytes ->
                 Err _ -> Err NoChoices
         Err _ -> when Shared.decodeErrorResponse responseBodyBytes is
             Ok err -> Err (HttpError err.error)
-            Err _ -> Err InvalidResponse
+            Err _ -> 
+                when responseBodyBytes |> Str.fromUtf8 is
+                Ok str -> Err (BadJson str)
+                Err _ -> Err InvalidResponse
 
 ## Decode the JSON response body of an API error message
 decodeErrorResponse = Shared.decodeErrorResponse
