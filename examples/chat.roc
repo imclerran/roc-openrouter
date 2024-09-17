@@ -35,7 +35,7 @@ loop = \{ client, previousMessages } ->
 
 ## Send the messages to the API, print the response, and return the updated messages in a Step
 handlePrompt = \client, messages ->
-    response = Http.send! (Chat.buildHttpRequest client messages)
+    response = Http.send (Chat.buildHttpRequest client messages) |> Task.result!
     updatedMessages = getMessagesFromResponse messages response
     when List.last updatedMessages is
         Ok { role, content } if role == "assistant" ->
@@ -50,12 +50,19 @@ handlePrompt = \client, messages ->
             Task.ok (Step { client, previousMessages: updatedMessages })
 
 ## decode the response from the OpenRouter API and append the first message to the list of messages
-getMessagesFromResponse : List Message, Http.Response -> List Message
-getMessagesFromResponse = \messages, response ->
-    when Chat.decodeTopMessageChoice response.body is
-        Ok message -> List.append messages message
-        Err (BadJson str) -> Chat.appendSystemMessage messages str
-        Err _ -> Chat.appendSystemMessage messages "Error decoding API response"
+getMessagesFromResponse : List Message, Result Http.Response _ -> List Message
+getMessagesFromResponse = \messages, responseRes ->
+    when responseRes is
+        Ok response ->
+            when Chat.decodeTopMessageChoice response.body is
+                Ok message -> List.append messages message
+                Err (ApiError err) -> Chat.appendSystemMessage messages "API error: $(err.message)"
+                Err NoChoices -> Chat.appendSystemMessage messages "No choices in API response"
+                Err (BadJson str) -> Chat.appendSystemMessage messages "Could not decode JSON response:\n$(str)"
+                Err DecodingError -> Chat.appendSystemMessage messages "Error decoding API response"
+
+        Err (HttpErr err) ->
+            Chat.appendSystemMessage messages (Http.errorToString err)
 
 ## Get the API key from the environmental variable
 getApiKey =
@@ -70,7 +77,9 @@ getModelChoice =
     Task.loop {} \{} ->
         Stdout.line! modelMenuString
         Stdout.write! "Choose a model (or press enter): "
-        choiceStr = Stdin.line!
+        choiceStr =
+            Stdin.line!
+                |> \str -> if str == "" then "1" else str
         if Dict.contains modelChoices choiceStr then
             Dict.get modelChoices choiceStr
             |> Result.withDefault defaultModel
@@ -90,7 +99,7 @@ initializeMessages =
         """
 
 ## The default model selection
-defaultModel = "meta-llama/llama-3-8b-instruct:free"
+defaultModel = "meta-llama/llama-3.1-8b-instruct:free"
 
 ## Define the model choices
 modelChoices =

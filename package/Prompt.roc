@@ -116,7 +116,7 @@ decodeResponse = \bodyBytes ->
     decoded.result
 
 ## Decode the JSON response body to the first message in the list of choices
-decodeTopTextChoice : List U8 -> Result Str [HttpError ApiError, InvalidResponse, NoChoices]
+decodeTopTextChoice : List U8 -> Result Str [ApiError ApiError, DecodingError, NoChoices, BadJson Str]
 decodeTopTextChoice = \responseBodyBytes ->
     when decodeResponse responseBodyBytes is
         Ok body ->
@@ -126,8 +126,11 @@ decodeTopTextChoice = \responseBodyBytes ->
 
         Err _ ->
             when decodeErrorResponse responseBodyBytes is
-                Ok err -> Err (HttpError err.error)
-                Err _ -> Err InvalidResponse
+                Ok err -> Err (ApiError err.error)
+                Err _ ->
+                    when responseBodyBytes |> Str.fromUtf8 is
+                        Ok str -> Err (BadJson str)
+                        Err _ -> Err DecodingError
 
 ## Decode the JSON response body of an API error message
 decodeErrorResponse = Shared.decodeErrorResponse

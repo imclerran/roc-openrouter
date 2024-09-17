@@ -1,6 +1,5 @@
 app [main] {
     cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.15.0/SlwdbJ-3GR7uBWQo6zlmYWNYOxnvo8r6YABXD-45UOw.tar.br",
-    # cli: platform "../../basic-cli/platform/main.roc"
     json: "https://github.com/lukewilliamboswell/roc-json/releases/download/0.10.2/FH4N0Sw-JSFXJfG3j54VEDPtXOoN-6I9v_IA8S18IGk.tar.br",
     ai: "../package/main.roc",
 }
@@ -24,9 +23,10 @@ main =
     response = Http.send! (Prompt.buildHttpRequest client query)
     when Prompt.decodeTopTextChoice response.body is
         Ok text -> Stdout.line (text |> Str.trim)
-        Err (HttpError error) -> Stdout.line error.message
+        Err (ApiError error) -> Stdout.line error.message
         Err NoChoices -> Stdout.line "No choices found in API response"
-        Err InvalidResponse -> Stdout.line "Invalid API response"
+        Err (BadJson str) -> Stdout.line "Invalid JSON response:\n$(str)"
+        Err DecodingError -> Stdout.line "Invalid API response"
 
 ## Get the API key from the environmental variable
 getApiKey =
