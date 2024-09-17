@@ -20,7 +20,6 @@ This package is still in WIP 🛠️ stages, so the interface may be subject to 
 ```roc
 import cli.Stdout
 import cli.Http
-import cli.Task
 import ai.Chat
 
 main =
@@ -29,9 +28,11 @@ main =
     messages = Chat.appendUserMessage [] "Hello, world!"
     response = Http.send! (Chat.buildRequest client messages)
     when Chat.decodeTopMessageChoice response.body is
-        Ok message -> Stdout.line message.content
-        Err (HttpError err) -> Stdout.line "$(Num.toStr err.code): $(err.message)"
-        Err _ -> Stdout.line "Error decoding API response"
+        Ok message -> Stdout.line! message.content
+        Err (ApiError err) -> Stdout.line! "$(Num.toStr err.code): $(err.message)"
+        Err NoChoices -> Stdout.line! "No message choices in API response"
+        Err (BadJson str) -> Stdout.line! "Error parsing JSON:\n$(str)"
+        Err DecodingError -> Stdout.line! "Error decoding API response"
 ```
 
 For complete example apps, including a full chatbot app, see the examples folder.
