@@ -10,11 +10,8 @@ This package is still in WIP 🛠️ stages, so the interface may be subject to 
 - Easy access to over 140 up-to-date models, plus additional older models.
 - Most common LLM parameters such as `temperature`, `topP`, `topK`, `repetitionPenalty`, etc.
 - OpenRouter specific features like fallback models and provider preferences.
+- 🚀 __NEW!__ LLM tool use - this enables the AI model to call Roc functions and use the results in its answers. 
 
-## Coming (maybe not so) soon 🚀
-
-- LLM tool use! 🔨🔧🪛⛏️🪓
-  - Blocked on [support for Dict type in EncoderFormatting](https://github.com/roc-lang/roc/issues/5294)
 
 ## Example
 ```roc
