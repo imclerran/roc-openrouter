@@ -216,9 +216,13 @@ setResponseFormat = \client, responseFormat ->
 setModels : Client, List Str -> Client
 setModels = \client, models ->
     modelsOption =
-        if List.isEmpty models
-            then Option.none {}
-            else Option.some models
+        if
+            List.isEmpty models
+        then
+            Option.none {}
+            else
+
+        Option.some models
     { client & models: modelsOption }
 
 ## Set the parameter which determines whether to use a fallback model if the primary model fails.

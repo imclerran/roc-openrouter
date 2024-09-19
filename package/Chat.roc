@@ -28,8 +28,8 @@ Message : {
     role : Str,
     content : Str,
     toolCalls : Option (List ToolCall),
-    name: Option Str,
-    toolCallId: Option Str,
+    name : Option Str,
+    toolCallId : Option Str,
 }
 
 ## Internal ChatML message to decode messages from JSON. Allows optional fields.
@@ -37,8 +37,8 @@ InternalMessage : {
     role : Str,
     content : Option Str,
     toolCalls : Option (List ToolCall),
-    name: Option Str,
-    toolCallId: Option Str,
+    name : Option Str,
+    toolCallId : Option Str,
 }
 
 ## The structure of the request body to be sent in the Http request
@@ -117,9 +117,9 @@ buildHttpRequest = \client, messages, { toolChoice ? Auto } ->
         headers: [{ key: "Authorization", value: "Bearer $(client.apiKey)" }],
         url: client.url,
         mimeType: "application/json",
-        body: encodeRequestBody body 
-            |> InternalTools.injectTools tools
-            |> InternalTools.injectToolChoice toolChoice,
+        body: encodeRequestBody body
+        |> InternalTools.injectTools tools
+        |> InternalTools.injectToolChoice toolChoice,
         timeout: client.requestTimeout,
     }
 
@@ -151,35 +151,33 @@ decodeResponse = \bodyBytes ->
     decoder = Json.utf8With { fieldNameMapping: SnakeCase }
     decoded : Decode.DecodeResult InternalChatResponseBody
     decoded = Decode.fromBytesPartial cleanedBody decoder
-    decoded.result |> Result.map \internalResponse ->
-        {
-            id: internalResponse.id,
-            model: internalResponse.model,
-            object: internalResponse.object,
-            created: internalResponse.created,
-            choices: internalResponse.choices
-                |> List.map \{ index, message: internalMessage, finishReason: internalFinishReason } ->
-                    { 
-                        index, 
-                        message: convertInternalMessage internalMessage, 
-                        finishReason: optionToStr internalFinishReason 
-                    },
-            usage: internalResponse.usage,
-        }
+    decoded.result
+    |> Result.map \internalResponse -> {
+        id: internalResponse.id,
+        model: internalResponse.model,
+        object: internalResponse.object,
+        created: internalResponse.created,
+        choices: internalResponse.choices
+        |> List.map \{ index, message: internalMessage, finishReason: internalFinishReason } -> {
+            index,
+            message: convertInternalMessage internalMessage,
+            finishReason: optionToStr internalFinishReason,
+        },
+        usage: internalResponse.usage,
+    }
 
 ## Convert an InternalMessage to a Message
 convertInternalMessage : InternalMessage -> Message
-convertInternalMessage = \internalMessage ->
-    {
-        role: internalMessage.role,
-        content: 
-            when Option.get internalMessage.content is
-                Some content -> content
-                None -> "",
-        toolCalls: internalMessage.toolCalls,
-        toolCallId: internalMessage.toolCallId,
-        name: internalMessage.name,
-    }
+convertInternalMessage = \internalMessage -> {
+    role: internalMessage.role,
+    content:
+    when Option.get internalMessage.content is
+        Some content -> content
+        None -> "",
+    toolCalls: internalMessage.toolCalls,
+    toolCallId: internalMessage.toolCallId,
+    name: internalMessage.name,
+}
 
 ## Decode the JSON response body to the first message in the list of choices
 decodeTopMessageChoice : List U8 -> Result Message [ApiError ApiError, DecodingError, NoChoices, BadJson Str]
@@ -215,15 +213,15 @@ encodeRequestBody = \body ->
 
 ## Append a system message to the list of messages
 appendSystemMessage : List Message, Str -> List Message
-appendSystemMessage = \messages, content -> 
+appendSystemMessage = \messages, content ->
     List.append messages { role: "system", content, toolCalls: Option.none {}, toolCallId: Option.none {}, name: Option.none {} }
 
 ## Append a user message to the list of messages
 appendUserMessage : List Message, Str -> List Message
-appendUserMessage = \messages, content -> 
-    List.append messages { role: "user", content, toolCalls: Option.none {}, toolCallId: Option.none {}, name: Option.none {} } 
+appendUserMessage = \messages, content ->
+    List.append messages { role: "user", content, toolCalls: Option.none {}, toolCallId: Option.none {}, name: Option.none {} }
 
 ## Append an assistant message to the list of messages
 appendAssistantMessage : List Message, Str -> List Message
-appendAssistantMessage = \messages, content -> 
+appendAssistantMessage = \messages, content ->
     List.append messages { role: "assistant", content, toolCalls: Option.none {}, toolCallId: Option.none {}, name: Option.none {} }

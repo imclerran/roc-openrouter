@@ -153,10 +153,11 @@ toCstTool =
 ## Handler for the toCst tool
 toCst : Str -> Task Str _
 toCst = \args ->
-    { utcTime } = args
-        |> Str.toUtf8
-        |> Decode.fromBytes Json.utf8
-        |> Task.fromResult!
+    { utcTime } =
+        args
+            |> Str.toUtf8
+            |> Decode.fromBytes Json.utf8
+            |> Task.fromResult!
     utcTime
         |> DateTime.fromIsoStr
         |> Task.fromResult!
