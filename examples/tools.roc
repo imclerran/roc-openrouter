@@ -31,10 +31,8 @@ loop = \{ client, previousMessages } ->
     Stdout.write! "You: "
     query = Stdin.line!
     messages = Chat.appendUserMessage previousMessages query
-    when query |> strToLower is
+    when query is
         "goodbye" -> Task.ok (Done {})
-        "goodbye." -> Task.ok (Done {})
-        "goodbye!" -> Task.ok (Done {})
         _ -> handlePrompt client messages
 
 ## Handle the prompt and send the request to the OpenRouter API
@@ -51,6 +49,9 @@ printLastMessage = \messages ->
     when List.last messages is
         Ok { role, content } if role == "assistant" ->
             Stdout.line! ("\nAssistant: $(content)\n" |> Ansi.color { fg: Standard Magenta })
+        
+        Ok { role, content } if role == "system" ->
+            Stdout.line! ("\nAssistant: $(content)\n" |> Ansi.color { fg: Standard Cyan })
 
         _ -> Task.ok {}
 
@@ -68,16 +69,6 @@ getMessagesFromResponse = \messages, responseRes ->
 
         Err (HttpErr err) ->
             Chat.appendSystemMessage messages (Http.errorToString err)
-
-## Convert a string to lowercase
-strToLower : Str -> Str
-strToLower = \str ->
-    str
-    |> Str.toUtf8
-    |> List.walk [] \acc, elem ->
-        acc |> List.append (if elem >= 65 && elem <= 90 then elem + 32 else elem)
-    |> Str.fromUtf8
-    |> Result.withDefault str
 
 ## Get the API key from the environmental variable
 getApiKey : Task Str _
