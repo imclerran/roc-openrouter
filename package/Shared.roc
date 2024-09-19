@@ -1,6 +1,7 @@
-module [ApiError, TimeoutConfig, ErrorResponse, RequestObject, ResponseFormat, dropLeadingGarbage, decodeErrorResponse]
+module [ApiError, TimeoutConfig, ErrorResponse, RequestObject, ResponseFormat, dropLeadingGarbage, decodeErrorResponse, optionToStr, optionToList]
 
 import json.Json
+import json.Option exposing [Option]
 
 ## Redefinition of TimeoutConfig from the basic-cli Http module
 TimeoutConfig : [TimeoutMilliseconds U64, NoTimeout]
@@ -46,3 +47,15 @@ decodeErrorResponse = \bodyBytes ->
     decoded : Decode.DecodeResult ErrorResponse
     decoded = Decode.fromBytesPartial cleanedBody decoder
     decoded.result
+
+optionToStr : Option Str -> Str
+optionToStr = \opt ->
+    when Option.get opt is
+        Some str -> str
+        None -> ""
+
+optionToList : Option (List a) -> List a
+optionToList = \opt ->
+    when Option.get opt is
+        Some list -> list
+        None -> []

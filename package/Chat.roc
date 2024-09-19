@@ -2,11 +2,11 @@ module [
     ChatRequestBody,
     ChatResponseBody,
     Message,
+    Client,
     appendAssistantMessage,
     appendSystemMessage,
     appendUserMessage,
     buildHttpRequest,
-    buildRequestBody,
     decodeErrorResponse,
     decodeResponse,
     decodeTopMessageChoice,
@@ -17,14 +17,28 @@ module [
 import json.Json
 import json.Option exposing [Option]
 
-import Shared exposing [RequestObject, ApiError, dropLeadingGarbage]
-import Client exposing [Client]
+import Client
+import Shared exposing [RequestObject, ApiError, dropLeadingGarbage, optionToStr]
+import InternalTools exposing [ToolCall, ToolChoice]
+
+Client : Client.Client
 
 ## The OpenAI ChatML standard message used to query the AI model.
 Message : {
     role : Str,
     content : Str,
-    refusal : Str,
+    toolCalls : Option (List ToolCall),
+    name: Option Str,
+    toolCallId: Option Str,
+}
+
+## Internal ChatML message to decode messages from JSON. Allows optional fields.
+InternalMessage : {
+    role : Str,
+    content : Option Str,
+    toolCalls : Option (List ToolCall),
+    name: Option Str,
+    toolCallId: Option Str,
 }
 
 ## The structure of the request body to be sent in the Http request
@@ -47,6 +61,8 @@ ChatRequestBody : {
     responseFormat : { type : Str },
     models : Option (List Str),
     route : Option Str,
+    # tools: Option (List Tools.Tool),
+    # toolChoice: Option Tools.ToolChoice,
 }
 
 ## The structure of the JSON response body received from the OpenRouter API
@@ -58,6 +74,23 @@ ChatResponseBody : {
     choices : List {
         index : U8,
         message : Message,
+        finishReason : Str,
+    },
+    usage : {
+        promptTokens : U64,
+        completionTokens : U64,
+        totalTokens : U64,
+    },
+}
+
+InternalChatResponseBody : {
+    id : Str,
+    model : Str,
+    object : Str,
+    created : U64,
+    choices : List {
+        index : U8,
+        message : InternalMessage,
         finishReason : Option Str,
     },
     usage : {
@@ -72,15 +105,21 @@ ChatResponseBody : {
 initClient = Client.init
 
 ## Create a request object to be sent with basic-cli's Http.send using ChatML messages
-buildHttpRequest : Client, List Message -> RequestObject
-buildHttpRequest = \client, messages ->
+buildHttpRequest : Client, List Message, { toolChoice ? ToolChoice } -> RequestObject
+buildHttpRequest = \client, messages, { toolChoice ? Auto } ->
     body = buildRequestBody client messages
+    tools =
+        when Option.get client.tools is
+            Some toolList -> toolList
+            None -> []
     {
         method: Post,
         headers: [{ key: "Authorization", value: "Bearer $(client.apiKey)" }],
         url: client.url,
         mimeType: "application/json",
-        body: encodeRequestBody body,
+        body: encodeRequestBody body 
+            |> InternalTools.injectTools tools
+            |> InternalTools.injectToolChoice toolChoice,
         timeout: client.requestTimeout,
     }
 
@@ -110,9 +149,37 @@ decodeResponse : List U8 -> Result ChatResponseBody _
 decodeResponse = \bodyBytes ->
     cleanedBody = dropLeadingGarbage bodyBytes
     decoder = Json.utf8With { fieldNameMapping: SnakeCase }
-    decoded : Decode.DecodeResult ChatResponseBody
+    decoded : Decode.DecodeResult InternalChatResponseBody
     decoded = Decode.fromBytesPartial cleanedBody decoder
-    decoded.result
+    decoded.result |> Result.map \internalResponse ->
+        {
+            id: internalResponse.id,
+            model: internalResponse.model,
+            object: internalResponse.object,
+            created: internalResponse.created,
+            choices: internalResponse.choices
+                |> List.map \{ index, message: internalMessage, finishReason: internalFinishReason } ->
+                    { 
+                        index, 
+                        message: convertInternalMessage internalMessage, 
+                        finishReason: optionToStr internalFinishReason 
+                    },
+            usage: internalResponse.usage,
+        }
+
+## Convert an InternalMessage to a Message
+convertInternalMessage : InternalMessage -> Message
+convertInternalMessage = \internalMessage ->
+    {
+        role: internalMessage.role,
+        content: 
+            when Option.get internalMessage.content is
+                Some content -> content
+                None -> "",
+        toolCalls: internalMessage.toolCalls,
+        toolCallId: internalMessage.toolCallId,
+        name: internalMessage.name,
+    }
 
 ## Decode the JSON response body to the first message in the list of choices
 decodeTopMessageChoice : List U8 -> Result Message [ApiError ApiError, DecodingError, NoChoices, BadJson Str]
@@ -148,12 +215,15 @@ encodeRequestBody = \body ->
 
 ## Append a system message to the list of messages
 appendSystemMessage : List Message, Str -> List Message
-appendSystemMessage = \messages, content -> List.append messages { role: "system", content, refusal: "" }
+appendSystemMessage = \messages, content -> 
+    List.append messages { role: "system", content, toolCalls: Option.none {}, toolCallId: Option.none {}, name: Option.none {} }
 
 ## Append a user message to the list of messages
 appendUserMessage : List Message, Str -> List Message
-appendUserMessage = \messages, content -> List.append messages { role: "user", content, refusal: "" }
+appendUserMessage = \messages, content -> 
+    List.append messages { role: "user", content, toolCalls: Option.none {}, toolCallId: Option.none {}, name: Option.none {} } 
 
 ## Append an assistant message to the list of messages
 appendAssistantMessage : List Message, Str -> List Message
-appendAssistantMessage = \messages, content -> List.append messages { role: "assistant", content, refusal: "" }
+appendAssistantMessage = \messages, content -> 
+    List.append messages { role: "assistant", content, toolCalls: Option.none {}, toolCallId: Option.none {}, name: Option.none {} }

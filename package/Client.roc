@@ -18,12 +18,14 @@ module [
     setResponseFormat,
     setModels,
     setRoute,
+    setTools,
     defaultModel,
     defaultUrl,
 ]
 
 import json.Option exposing [Option]
 import Shared exposing [TimeoutConfig]
+import Tools
 
 ## The record used to store configuration for the OpenRouter API client.
 Client : {
@@ -45,6 +47,7 @@ Client : {
     responseFormat : { type : Str },
     models : Option (List Str),
     route : Option Str,
+    tools: Option (List Tools.Tool),
 }
 
 defaultModel = "openrouter/auto"
@@ -72,9 +75,10 @@ init :
         responseFormat ? Str,
         models ? List Str,
         route ? [UseFallback, NoFallback],
+        tools ? List Tools.Tool,
     }
     -> Client
-init = \{ apiKey, model ? defaultModel, url ? defaultUrl, requestTimeout ? NoTimeout, providerOrder ? [], temperature ? 1.0, topP ? 1.0, topK ? 0, frequencyPenalty ? 0.0, presencePenalty ? 0.0, repetitionPenalty ? 1.0, minP ? 0.0, topA ? 0.0, seed ? 0, maxTokens ? 0, responseFormat ? "text", models ? [], route ? NoFallback } ->
+init = \{ apiKey, model ? defaultModel, url ? defaultUrl, requestTimeout ? NoTimeout, providerOrder ? [], temperature ? 1.0, topP ? 1.0, topK ? 0, frequencyPenalty ? 0.0, presencePenalty ? 0.0, repetitionPenalty ? 1.0, minP ? 0.0, topA ? 0.0, seed ? 0, maxTokens ? 0, responseFormat ? "text", models ? [], route ? NoFallback, tools ? [] } ->
     {
         apiKey,
         model,
@@ -94,12 +98,14 @@ init = \{ apiKey, model ? defaultModel, url ? defaultUrl, requestTimeout ? NoTim
         responseFormat: { type: responseFormat },
         models: Option.none {},
         route: Option.none {},
+        tools: Option.none {},
     }
     |> setProviderOrder providerOrder
     |> setSeed seed
     |> setMaxTokens maxTokens
     |> setModels models
     |> setRoute route
+    |> setTools tools
 
 ## Set the model to be used for the API requests.
 ## Default: "openrouter/auto"
@@ -227,3 +233,11 @@ setRoute = \client, route ->
             NoFallback -> Option.none {}
             UseFallback -> Option.some "fallback"
     { client & route: routeOption }
+
+setTools : Client, List Tools.Tool -> Client
+setTools = \client, tools ->
+    toolsOption =
+        if List.isEmpty tools
+            then Option.none {}
+            else Option.some tools
+    { client & tools: toolsOption }
