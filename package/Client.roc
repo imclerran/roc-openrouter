@@ -47,7 +47,7 @@ Client : {
     responseFormat : { type : Str },
     models : Option (List Str),
     route : Option Str,
-    tools: Option (List Tools.Tool),
+    tools : Option (List Tools.Tool),
 }
 
 defaultModel = "openrouter/auto"
@@ -216,9 +216,13 @@ setResponseFormat = \client, responseFormat ->
 setModels : Client, List Str -> Client
 setModels = \client, models ->
     modelsOption =
-        if List.isEmpty models
-            then Option.none {}
-            else Option.some models
+        if
+            List.isEmpty models
+        then
+            Option.none {}
+            else
+
+        Option.some models
     { client & models: modelsOption }
 
 ## Set the parameter which determines whether to use a fallback model if the primary model fails.

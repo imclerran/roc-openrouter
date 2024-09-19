@@ -1,4 +1,4 @@
-module [Tool, ToolCall, buildTool, callTools] 
+module [Tool, ToolCall, buildTool, callTools]
 
 import InternalTools
 
