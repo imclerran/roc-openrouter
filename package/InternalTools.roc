@@ -54,10 +54,10 @@ Message : {
     name : Option Str,
 }
 
-## Using the given toolHandlerMap, call all the tools in the tool call list, 
+## Using the given toolHandlerMap, call all the tools in the tool call list,
 ## and return the list of tool messages to send to the model.
-## 
-## The toolHandlerMap is a dictionary mapping tool function names to functions 
+##
+## The toolHandlerMap is a dictionary mapping tool function names to functions
 ## that take the arguments as a JSON string, parse the json, and return the tool's response.
 callTools : List ToolCall, Dict Str (Str -> Task Str _) -> Task (List Message) _
 callTools = \toolCallList, toolHandlerMap ->
@@ -68,10 +68,11 @@ callTools = \toolCallList, toolHandlerMap ->
                     Ok parseAndCall ->
                         toolMessage = callTool! toolCall parseAndCall
                         updatedToolMessages = List.append toolMessages toolMessage
-                        Task.ok (Step { toolCalls: (List.dropFirst toolCalls 1), toolMessages: updatedToolMessages })
-                    
-                    _ -> 
-                        Task.ok (Step { toolCalls: (List.dropFirst toolCalls 1), toolMessages })
+                        Task.ok (Step { toolCalls: List.dropFirst toolCalls 1, toolMessages: updatedToolMessages })
+
+                    _ ->
+                        Task.ok (Step { toolCalls: List.dropFirst toolCalls 1, toolMessages })
+
             Err ListWasEmpty -> Task.ok (Done toolMessages)
 
 ## Call the given tool function with the given arguments and return the tool message.
