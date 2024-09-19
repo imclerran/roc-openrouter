@@ -35,7 +35,7 @@ loop = \{ client, previousMessages } ->
 
 ## Send the messages to the API, print the response, and return the updated messages in a Step
 handlePrompt = \client, messages ->
-    response = Http.send (Chat.buildHttpRequest client messages) |> Task.result!
+    response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
     updatedMessages = getMessagesFromResponse messages response
     when List.last updatedMessages is
         Ok { role, content } if role == "assistant" ->
