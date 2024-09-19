@@ -25,7 +25,7 @@ module [
 
 import json.Option exposing [Option]
 import Shared exposing [TimeoutConfig]
-import Tools
+import InternalTools exposing [Tool]
 
 ## The record used to store configuration for the OpenRouter API client.
 Client : {
@@ -47,7 +47,7 @@ Client : {
     responseFormat : { type : Str },
     models : Option (List Str),
     route : Option Str,
-    tools: Option (List Tools.Tool),
+    tools: Option (List Tool),
 }
 
 defaultModel = "openrouter/auto"
@@ -75,7 +75,7 @@ init :
         responseFormat ? Str,
         models ? List Str,
         route ? [UseFallback, NoFallback],
-        tools ? List Tools.Tool,
+        tools ? List Tool,
     }
     -> Client
 init = \{ apiKey, model ? defaultModel, url ? defaultUrl, requestTimeout ? NoTimeout, providerOrder ? [], temperature ? 1.0, topP ? 1.0, topK ? 0, frequencyPenalty ? 0.0, presencePenalty ? 0.0, repetitionPenalty ? 1.0, minP ? 0.0, topA ? 0.0, seed ? 0, maxTokens ? 0, responseFormat ? "text", models ? [], route ? NoFallback, tools ? [] } ->
@@ -234,7 +234,7 @@ setRoute = \client, route ->
             UseFallback -> Option.some "fallback"
     { client & route: routeOption }
 
-setTools : Client, List Tools.Tool -> Client
+setTools : Client, List Tool -> Client
 setTools = \client, tools ->
     toolsOption =
         if List.isEmpty tools

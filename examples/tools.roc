@@ -13,11 +13,10 @@ import cli.Env
 import cli.Utc
 
 import ai.Chat exposing [Client, Message]
-import ai.Tools exposing [Tool]
+import ai.Tools { sendHttpReq: Http.send } exposing [Tool]
 import ansi.Core as Ansi
 import iso.DateTime
 import json.Json
-import json.Option
 
 main : Task {} _
 main =
@@ -42,26 +41,9 @@ loop = \{ client, previousMessages } ->
 handlePrompt : Client, List Message -> Task [Step { client : Client, previousMessages : List Message }] _
 handlePrompt = \client, messages ->
     response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
-    updatedMessages = getMessagesFromResponse messages response |> handleToolCalls! client
+    updatedMessages = getMessagesFromResponse messages response |> Tools.callTools! client toolHandlerMap
     printLastMessage! updatedMessages
     Task.ok (Step { client, previousMessages: updatedMessages })
-
-## Handle tool calls in the messages
-handleToolCalls : List Message, Client -> Task (List Message) _
-handleToolCalls = \messages, client ->
-    when List.last messages is
-        Ok { role, toolCalls: tcs } if role == "assistant" ->
-            when Option.get tcs is
-                Some toolCalls ->
-                    toolMessages = Tools.callTools! toolCalls toolHandlerMap
-                    messagesWithTools = List.join [messages, toolMessages]
-                    response = Http.send (Chat.buildHttpRequest client messagesWithTools {}) |> Task.result!
-                    messagesWithResponse = getMessagesFromResponse messagesWithTools response
-                    handleToolCalls messagesWithResponse client
-
-                None -> Task.ok messages
-
-        _ -> Task.ok messages
 
 # Print the last message in the list of messages. Will only print assistant messages.
 printLastMessage : List Message -> Task {} _
