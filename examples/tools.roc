@@ -30,18 +30,14 @@ loop : { client : Client, previousMessages : List Message } -> Task [Done {}, St
 loop = \{ client, previousMessages } ->
     Stdout.write! "You: "
     query = Stdin.line!
-    messages = Chat.appendUserMessage previousMessages query
     when query is
         "goodbye" -> Task.ok (Done {})
-        _ -> handlePrompt client messages
-
-## Handle the prompt and send the request to the OpenRouter API
-handlePrompt : Client, List Message -> Task [Step { client : Client, previousMessages : List Message }] _
-handlePrompt = \client, messages ->
-    response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
-    updatedMessages = getMessagesFromResponse messages response |> Tools.callTools! client toolHandlerMap
-    printLastMessage! updatedMessages
-    Task.ok (Step { client, previousMessages: updatedMessages })
+        _ ->
+            messages = Chat.appendUserMessage previousMessages query
+            response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+            updatedMessages = getMessagesFromResponse messages response |> Tools.callTools! client toolHandlerMap
+            printLastMessage! updatedMessages
+            Task.ok (Step { client, previousMessages: updatedMessages })
 
 # Print the last message in the list of messages. Will only print assistant messages.
 printLastMessage : List Message -> Task {} _
@@ -49,7 +45,7 @@ printLastMessage = \messages ->
     when List.last messages is
         Ok { role, content } if role == "assistant" ->
             Stdout.line! ("\nAssistant: $(content)\n" |> Ansi.color { fg: Standard Magenta })
-        
+
         Ok { role, content } if role == "system" ->
             Stdout.line! ("\nAssistant: $(content)\n" |> Ansi.color { fg: Standard Cyan })
 
@@ -80,20 +76,16 @@ getApiKey =
 
 ## tool for the utcNow function
 utcNowTool : Tool
-utcNowTool =
-    Tools.buildTool
-        "utcNow"
-        "Get the current UTC time as an ISO 8601 string"
-        []
+utcNowTool = Tools.buildTool "utcNow" "Get the current UTC time as an ISO 8601 string" []
 
 ## Handler for the utcNow tool
 utcNow : Str -> Task Str _
 utcNow = \_args ->
     Utc.now! {}
-    |> Utc.toNanosSinceEpoch
-    |> DateTime.fromNanosSinceEpoch
-    |> DateTime.toIsoStr
-    |> Task.ok
+        |> Utc.toNanosSinceEpoch
+        |> DateTime.fromNanosSinceEpoch
+        |> DateTime.toIsoStr
+        |> Task.ok
 
 ## tool for the toCdt function
 toCdtTool : Tools.Tool
@@ -124,10 +116,10 @@ toCdt = \args ->
 ## tool for the toCst function
 toCstTool : Tools.Tool
 toCstTool =
-    utcTimeParam = { 
-        name: "utcTime", 
-        type: "string", 
-        description: "An ISO 8601 formatted time to convert from UTC to CST", 
+    utcTimeParam = {
+        name: "utcTime",
+        type: "string",
+        description: "An ISO 8601 formatted time to convert from UTC to CST",
         required: Bool.true,
     }
     Tools.buildTool "toCst" "Convert a UTC time to a CST time" [utcTimeParam]
@@ -135,7 +127,7 @@ toCstTool =
 ## Handler for the toCst tool
 toCst : Str -> Task Str _
 toCst = \args ->
-    { utcTime } =
+    utcTime =
         args
             |> Str.toUtf8
             |> Decode.fromBytes Json.utf8
@@ -150,7 +142,4 @@ toCst = \args ->
 ## Map of tool names to tool handlers
 toolHandlerMap : Dict Str (Str -> Task Str _)
 toolHandlerMap =
-    Dict.empty {}
-    |> Dict.insert "utcNow" utcNow
-    |> Dict.insert "toCdt" toCdt
-    |> Dict.insert "toCst" toCst
+    Dict.fromList [("utcNow", utcNow), ("toCdt", toCdt), ("toCst", toCst)]
