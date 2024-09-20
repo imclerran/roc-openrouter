@@ -25,6 +25,14 @@ main =
     Stdout.line! ("Assistant: Ask me about the time!\n" |> Ansi.color { fg: Standard Cyan })
     Task.loop! { client, previousMessages: [] } loop
 
+## Get the API key from the environmental variable
+getApiKey : Task Str _
+getApiKey =
+    Task.attempt (Env.var "OPENROUTER_API_KEY") \keyResult ->
+        when keyResult is
+            Ok key -> Task.ok key
+            Err VarNotFound -> crash "OPENROUTER_API_KEY environment variable not set"
+
 ## The main loop of the program
 loop : { client : Client, previousMessages : List Message } -> Task [Done {}, Step _] _
 loop = \{ client, previousMessages } ->
@@ -65,14 +73,6 @@ getMessagesFromResponse = \messages, responseRes ->
 
         Err (HttpErr err) ->
             Chat.appendSystemMessage messages (Http.errorToString err)
-
-## Get the API key from the environmental variable
-getApiKey : Task Str _
-getApiKey =
-    Task.attempt (Env.var "OPENROUTER_API_KEY") \keyResult ->
-        when keyResult is
-            Ok key -> Task.ok key
-            Err VarNotFound -> crash "OPENROUTER_API_KEY environment variable not set"
 
 ## tool for the utcNow function
 utcNowTool : Tool
