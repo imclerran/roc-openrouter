@@ -6,6 +6,7 @@ app [main] {
 }
 
 import ai.Chat exposing [Message]
+import ai.Client
 import ansi.Core as Ansi
 import cli.Env
 import cli.Http
@@ -16,11 +17,13 @@ main =
     apiKey = getApiKey!
     model = getModelChoice!
     providerOrder = Dict.get preferredProviders model |> Result.withDefault []
-    client = Chat.initClient { apiKey, model, providerOrder }
+    client = Client.init { apiKey, model, providerOrder }
     Stdout.line! "Using model: $(model |> Ansi.color { fg: Standard Magenta })\n"
     Stdout.line! "Enter your questions below, or type 'Goodbye' to exit"
     Task.loop! { client, previousMessages: initializeMessages } loop
-    Stdout.line (colorizeRole (Assistant "\nAssistant:  I have been a good chatbot. Goodbye! 😊"))
+    "\nAssistant:  I have been a good chatbot. Goodbye! 😊"
+    |> Ansi.color { fg: Standard Magenta }
+    |> Stdout.line
 
 ## The main loop for the chatbot
 loop = \{ client, previousMessages } ->
@@ -28,26 +31,41 @@ loop = \{ client, previousMessages } ->
     query = Stdin.line!
     messages = Chat.appendUserMessage previousMessages query
     when query |> strToLower is
-        "goodbye" -> Task.ok (Done {})
-        "goodbye." -> Task.ok (Done {})
-        "goodbye!" -> Task.ok (Done {})
-        _ -> handlePrompt client messages
-
-## Send the messages to the API, print the response, and return the updated messages in a Step
-handlePrompt = \client, messages ->
-    response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
-    updatedMessages = getMessagesFromResponse messages response
-    when List.last updatedMessages is
-        Ok { role, content } if role == "assistant" ->
-            Stdout.line! (colorizeRole (Assistant "\nAssistant: $(content)\n"))
-            Task.ok (Step { client, previousMessages: updatedMessages })
-
-        Ok { role, content } if role == "system" ->
-            Stdout.line! (colorizeRole (System "\nSystem: $(content)\n"))
-            Task.ok (Step { client, previousMessages: updatedMessages })
+        "goodbye" | "quit" | "exit" -> Task.ok (Done {})
+        "change model" ->
+            Stdout.line! ""
+            model = getModelChoice!
+            providerOrder = Dict.get preferredProviders model |> Result.withDefault []
+            newClient =
+                client
+                |> Client.setModel model
+                |> Client.setProviderOrder providerOrder
+            Stdout.line! "Using model: $(model |> Ansi.color { fg: Standard Magenta })\n"
+            Task.ok (Step { client: newClient, previousMessages })
 
         _ ->
+            response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+            updatedMessages = getMessagesFromResponse messages response
+            printLastMessage! updatedMessages
             Task.ok (Step { client, previousMessages: updatedMessages })
+
+## Get the API key from the environmental variable
+getApiKey =
+    Task.attempt (Env.var "OPENROUTER_API_KEY") \keyResult ->
+        when keyResult is
+            Ok key -> Task.ok key
+            Err VarNotFound -> crash "OPENROUTER_API_KEY environment variable not set"
+
+# Print the last message in the list of messages. Will only print assistant and system messages.
+printLastMessage = \messages ->
+    when List.last messages is
+        Ok { role, content } if role == "assistant" ->
+            Stdout.line! ("\nAssistant: $(content)\n" |> Ansi.color { fg: Standard Magenta })
+
+        Ok { role, content } if role == "system" ->
+            Stdout.line! ("\nSystem: $(content)\n" |> Ansi.color { fg: Standard Blue })
+
+        _ -> Task.ok {}
 
 ## decode the response from the OpenRouter API and append the first message to the list of messages
 getMessagesFromResponse : List Message, Result Http.Response _ -> List Message
@@ -63,13 +81,6 @@ getMessagesFromResponse = \messages, responseRes ->
 
         Err (HttpErr err) ->
             Chat.appendSystemMessage messages (Http.errorToString err)
-
-## Get the API key from the environmental variable
-getApiKey =
-    Task.attempt (Env.var "OPENROUTER_API_KEY") \keyResult ->
-        when keyResult is
-            Ok key -> Task.ok key
-            Err VarNotFound -> crash "OPENROUTER_API_KEY environment variable not set"
 
 ## Prompt the user to choose a model and return the selected model
 getModelChoice : Task Str _
@@ -146,10 +157,3 @@ strToLower = \str ->
         acc |> List.append (if elem >= 65 && elem <= 90 then elem + 32 else elem)
     |> Str.fromUtf8
     |> Result.withDefault str
-
-colorizeRole : [Assistant Str, System Str, User Str] -> Str
-colorizeRole = \role ->
-    when role is
-        Assistant msg -> msg |> Ansi.color { fg: Standard Magenta }
-        System msg -> msg |> Ansi.color { fg: Standard Blue }
-        User msg -> msg |> Ansi.color { fg: Standard White }
