@@ -21,8 +21,8 @@ import json.Json
 main : Task {} _
 main =
     apiKey = getApiKey!
-    client = Chat.initClient { apiKey, model: "openai/gpt-4", tools: [utcNowTool, toCstTool, toCdtTool] }
-    Stdout.line! ("Assistant: Ask me about the time!\n" |> Ansi.color { fg: Standard Cyan })
+    client = Chat.initClient { apiKey, model: "openai/gpt-4", tools: [utcNowTool, toCstTool, toCdtTool, serperTool] }
+    Stdout.line! ("Assistant: Ask me about the time, or anything on the web!\n" |> Ansi.color { fg: Standard Cyan })
     Task.loop! { client, previousMessages: [] } loop
 
 ## Get the API key from the environmental variable
@@ -139,7 +139,37 @@ toCst = \args ->
         |> DateTime.toIsoStr
         |> Task.ok
 
+serperTool =
+    queryParam = {
+        name: "q",
+        type: "string",
+        description: "The search query to send to the serper.dev API",
+        required: Bool.true,
+    }
+    Tools.buildTool "serper" "Access to the serper.dev google search API" [queryParam]
+
+serper : Str -> Task Str _
+serper = \args ->
+    apiKey = Env.var! "SERPER_API_KEY"
+    request = {
+        method: Post,
+        headers: [{ key: "X-API-KEY", value: apiKey }],
+        url: "https://google.serper.dev/search",
+        mimeType: "application/json",
+        body: args |> Str.toUtf8,
+        timeout: NoTimeout,
+    }
+    when Http.send request |> Task.result! is
+        Ok response ->
+            response.body
+            |> Str.fromUtf8
+            |> Result.withDefault "Failed to decode API response"
+            |> Task.ok
+        Err _ ->
+            "Failed to get response from serper.dev"
+            |> Task.ok
+
 ## Map of tool names to tool handlers
 toolHandlerMap : Dict Str (Str -> Task Str _)
 toolHandlerMap =
-    Dict.fromList [("utcNow", utcNow), ("toCdt", toCdt), ("toCst", toCst)]
+    Dict.fromList [("utcNow", utcNow), ("toCdt", toCdt), ("toCst", toCst), ("serper", serper)]
