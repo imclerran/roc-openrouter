@@ -1,4 +1,4 @@
-module { sendHttpReq } -> [Tool, ToolCall, buildTool, callTools] 
+module { sendHttpReq } -> [Tool, ToolCall, buildTool, callTools, dispatchToolCalls] 
 
 import json.Option exposing [Option]
 import InternalTools
@@ -55,6 +55,9 @@ callTools = \messages, client, toolHandlerMap ->
         _ -> Task.ok messages
 
 ## Dispatch the tool calls to the appropriate tool handler functions and return the list of tool messages.
+##
+## The toolHandlerMap is a dictionary mapping tool function names to functions 
+## that take the arguments as a JSON string, parse the json, and return the tool's response.
 dispatchToolCalls : List ToolCall, Dict Str (Str -> Task Str _) -> Task (List Message) _
 dispatchToolCalls = \toolCallList, toolHandlerMap ->
     Task.loop { toolCalls: toolCallList, toolMessages: [] } \{ toolCalls, toolMessages } ->
