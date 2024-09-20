@@ -1,4 +1,4 @@
-module { sendHttpReq } -> [Tool, ToolCall, buildTool, callTools, dispatchToolCalls] 
+module { sendHttpReq } -> [Tool, ToolCall, buildTool, handleToolCalls, dispatchToolCalls] 
 
 import json.Option exposing [Option]
 import InternalTools
@@ -33,13 +33,13 @@ HttpHeader : {
 
 ## Using the given toolHandlerMap, check the last message for tool calls, call all
 ## the tools in the tool call list, send the results back to the model, and handle 
-## any additional tool calls that may have been generated. When no more tool calls
-## are present, return the updated list of messages.
+## any additional tool calls that may have been generated. If or when no more tool 
+## calls are present, return the updated list of messages.
 ## 
 ## The toolHandlerMap is a dictionary mapping tool function names to functions 
 ## that take the arguments as a JSON string, parse the json, and return the tool's response.
-callTools : List Message, Client, Dict Str (Str -> Task Str _) -> Task (List Message) _
-callTools = \messages, client, toolHandlerMap ->
+handleToolCalls : List Message, Client, Dict Str (Str -> Task Str _) -> Task (List Message) _
+handleToolCalls = \messages, client, toolHandlerMap ->
     when List.last messages is
         Ok { role, toolCalls: tcs } if role == "assistant" ->
             when Option.get tcs is
@@ -48,7 +48,7 @@ callTools = \messages, client, toolHandlerMap ->
                     messagesWithTools = List.join [messages, toolMessages]
                     response = sendHttpReq (Chat.buildHttpRequest client messagesWithTools {}) |> Task.result!
                     messagesWithResponse = getMessagesFromResponse messagesWithTools response
-                    callTools messagesWithResponse client toolHandlerMap
+                    handleToolCalls messagesWithResponse client toolHandlerMap
 
                 None -> Task.ok messages
 
