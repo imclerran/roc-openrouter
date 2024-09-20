@@ -14,6 +14,8 @@ import cli.Utc
 
 import ai.Chat exposing [Client, Message]
 import ai.Tools { sendHttpReq: Http.send } exposing [Tool]
+import ai.PrefabTools.Serper { sendHttpReq: Http.send, getEnvVar: Env.var } exposing [serper, serperTool]
+# code for working serper tool is commented out below
 import ansi.Core as Ansi
 import iso.DateTime
 import json.Json
@@ -139,35 +141,35 @@ toCst = \args ->
         |> DateTime.toIsoStr
         |> Task.ok
 
-serperTool =
-    queryParam = {
-        name: "q",
-        type: "string",
-        description: "The search query to send to the serper.dev API",
-        required: Bool.true,
-    }
-    Tools.buildTool "serper" "Access to the serper.dev google search API" [queryParam]
+# serperTool =
+#     queryParam = {
+#         name: "q",
+#         type: "string",
+#         description: "The search query to send to the serper.dev API",
+#         required: Bool.true,
+#     }
+#     Tools.buildTool "serper" "Access to the serper.dev google search API" [queryParam]
 
-serper : Str -> Task Str _
-serper = \args ->
-    apiKey = Env.var! "SERPER_API_KEY"
-    request = {
-        method: Post,
-        headers: [{ key: "X-API-KEY", value: apiKey }],
-        url: "https://google.serper.dev/search",
-        mimeType: "application/json",
-        body: args |> Str.toUtf8,
-        timeout: NoTimeout,
-    }
-    when Http.send request |> Task.result! is
-        Ok response ->
-            response.body
-            |> Str.fromUtf8
-            |> Result.withDefault "Failed to decode API response"
-            |> Task.ok
-        Err _ ->
-            "Failed to get response from serper.dev"
-            |> Task.ok
+# serper : Str -> Task Str _
+# serper = \args ->
+#     apiKey = Env.var! "SERPER_API_KEY"
+#     request = {
+#         method: Post,
+#         headers: [{ key: "X-API-KEY", value: apiKey }],
+#         url: "https://google.serper.dev/search",
+#         mimeType: "application/json",
+#         body: args |> Str.toUtf8,
+#         timeout: NoTimeout,
+#     }
+#     when Http.send request |> Task.result! is
+#         Ok response ->
+#             response.body
+#             |> Str.fromUtf8
+#             |> Result.withDefault "Failed to decode API response"
+#             |> Task.ok
+#         Err _ ->
+#             "Failed to get response from serper.dev"
+#             |> Task.ok
 
 ## Map of tool names to tool handlers
 toolHandlerMap : Dict Str (Str -> Task Str _)
