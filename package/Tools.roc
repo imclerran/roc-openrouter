@@ -48,7 +48,7 @@ handleToolCalls = \messages, client, toolHandlerMap ->
                     messagesWithTools = List.join [messages, toolMessages]
                     response = sendHttpReq (Chat.buildHttpRequest client messagesWithTools {}) |> Task.result!
                     messagesWithResponse = getMessagesFromResponse messagesWithTools response
-                    callTools messagesWithResponse client toolHandlerMap
+                    handleToolCalls messagesWithResponse client toolHandlerMap
 
                 None -> Task.ok messages
 
