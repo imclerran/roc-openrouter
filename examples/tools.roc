@@ -89,8 +89,7 @@ utcNowTool =
 ## Handler for the utcNow tool
 utcNow : Str -> Task Str _
 utcNow = \_args ->
-    now = Utc.now! {}
-    now
+    Utc.now! {}
     |> Utc.toNanosSinceEpoch
     |> DateTime.fromNanosSinceEpoch
     |> DateTime.toIsoStr
@@ -99,17 +98,13 @@ utcNow = \_args ->
 ## tool for the toCdt function
 toCdtTool : Tools.Tool
 toCdtTool =
-    Tools.buildTool
-        "toCdt"
-        "Convert a UTC time to a CDT time"
-        [
-            {
-                name: "utcTime",
-                type: "string",
-                description: "An ISO 8601 formatted time to convert from UTC to CDT",
-                required: Bool.true,
-            },
-        ]
+    utcTimeParam = {
+        name: "utcTime",
+        type: "string",
+        description: "An ISO 8601 formatted time to convert from UTC to CDT",
+        required: Bool.true,
+    }
+    Tools.buildTool "toCdt" "Convert a UTC time to a CDT time" [utcTimeParam]
 
 ## Handler for the toCdt tool
 toCdt : Str -> Task Str _
@@ -129,17 +124,13 @@ toCdt = \args ->
 ## tool for the toCst function
 toCstTool : Tools.Tool
 toCstTool =
-    Tools.buildTool
-        "toCst"
-        "Convert a UTC time to a CST time"
-        [
-            {
-                name: "utcTime",
-                type: "string",
-                description: "An ISO 8601 formatted time to convert from UTC to CST",
-                required: Bool.true,
-            },
-        ]
+    utcTimeParam = { 
+        name: "utcTime", 
+        type: "string", 
+        description: "An ISO 8601 formatted time to convert from UTC to CST", 
+        required: Bool.true,
+    }
+    Tools.buildTool "toCst" "Convert a UTC time to a CST time" [utcTimeParam]
 
 ## Handler for the toCst tool
 toCst : Str -> Task Str _
