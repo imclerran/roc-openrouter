@@ -39,7 +39,7 @@ loop = \{ client, previousMessages } ->
     Stdout.write! "You: "
     query = Stdin.line!
     when query is
-        "goodbye" -> Task.ok (Done {})
+        "goodbye" | "quit" | "exit" -> Task.ok (Done {})
         _ ->
             messages = Chat.appendUserMessage previousMessages query
             response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
@@ -47,7 +47,7 @@ loop = \{ client, previousMessages } ->
             printLastMessage! updatedMessages
             Task.ok (Step { client, previousMessages: updatedMessages })
 
-# Print the last message in the list of messages. Will only print assistant messages.
+# Print the last message in the list of messages. Will only print assistant and system messages.
 printLastMessage : List Message -> Task {} _
 printLastMessage = \messages ->
     when List.last messages is
