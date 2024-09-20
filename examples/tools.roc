@@ -127,7 +127,7 @@ toCstTool =
 ## Handler for the toCst tool
 toCst : Str -> Task Str _
 toCst = \args ->
-    utcTime =
+    { utcTime } =
         args
             |> Str.toUtf8
             |> Decode.fromBytes Json.utf8
