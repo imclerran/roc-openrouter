@@ -35,7 +35,7 @@ loop = \{ client, previousMessages } ->
         _ ->
             messages = Chat.appendUserMessage previousMessages query
             response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
-            updatedMessages = getMessagesFromResponse messages response |> Tools.callTools! client toolHandlerMap
+            updatedMessages = getMessagesFromResponse messages response |> Tools.handleToolCalls! client toolHandlerMap
             printLastMessage! updatedMessages
             Task.ok (Step { client, previousMessages: updatedMessages })
 
@@ -88,7 +88,7 @@ utcNow = \_args ->
         |> Task.ok
 
 ## tool for the toCdt function
-toCdtTool : Tools.Tool
+toCdtTool : Tool
 toCdtTool =
     utcTimeParam = {
         name: "utcTime",
@@ -114,7 +114,7 @@ toCdt = \args ->
         |> Task.ok
 
 ## tool for the toCst function
-toCstTool : Tools.Tool
+toCstTool : Tool
 toCstTool =
     utcTimeParam = {
         name: "utcTime",
