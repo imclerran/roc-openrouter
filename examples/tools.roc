@@ -14,8 +14,6 @@ import cli.Utc
 
 import ai.Chat exposing [Client, Message]
 import ai.Tools { sendHttpReq: Http.send } exposing [Tool]
-import ai.PrefabTools.Serper { sendHttpReq: Http.send, getEnvVar: Env.var } exposing [serper, serperTool]
-# code for working serper tool is commented out below
 import ansi.Core as Ansi
 import iso.DateTime
 import json.Json
@@ -23,7 +21,7 @@ import json.Json
 main : Task {} _
 main =
     apiKey = getApiKey!
-    client = Chat.initClient { apiKey, model: "openai/gpt-4", tools: [utcNowTool, toCstTool, toCdtTool, serperTool] }
+    client = Chat.initClient { apiKey, model: "openai/gpt-4o", tools: [utcNowTool, toCstTool, toCdtTool, serperTool] }
     Stdout.line! ("Assistant: Ask me about the time, or anything on the web!\n" |> Ansi.color { fg: Standard Cyan })
     Task.loop! { client, previousMessages: [] } loop
 
@@ -103,17 +101,19 @@ toCdtTool =
 ## Handler for the toCdt tool
 toCdt : Str -> Task Str _
 toCdt = \args ->
-    { utcTime } =
-        args
-            |> Str.toUtf8
-            |> Decode.fromBytes Json.utf8
-            |> Task.fromResult!
-    utcTime
-        |> DateTime.fromIsoStr
-        |> Task.fromResult!
-        |> DateTime.addHours -6
-        |> DateTime.toIsoStr
-        |> Task.ok
+    decoded : Decode.DecodeResult { utcTime : Str }
+    decoded = args |> Str.toUtf8 |> Decode.fromBytesPartial Json.utf8
+    when decoded.result is
+        Err _ -> 
+            Task.ok "Failed to decode args"
+
+        Ok { utcTime } ->
+            utcTime
+                |> DateTime.fromIsoStr
+                |> Task.fromResult!
+                |> DateTime.addHours -5
+                |> DateTime.toIsoStr
+                |> Task.ok
 
 ## tool for the toCst function
 toCstTool : Tool
@@ -129,47 +129,49 @@ toCstTool =
 ## Handler for the toCst tool
 toCst : Str -> Task Str _
 toCst = \args ->
-    { utcTime } =
-        args
-            |> Str.toUtf8
-            |> Decode.fromBytes Json.utf8
-            |> Task.fromResult!
-    utcTime
-        |> DateTime.fromIsoStr
-        |> Task.fromResult!
-        |> DateTime.addHours -5
-        |> DateTime.toIsoStr
-        |> Task.ok
+    decoded : Decode.DecodeResult { utcTime : Str }
+    decoded = args |> Str.toUtf8 |> Decode.fromBytesPartial Json.utf8
+    when decoded.result is
+        Err _ -> 
+            Task.ok "Failed to decode args"
 
-# serperTool =
-#     queryParam = {
-#         name: "q",
-#         type: "string",
-#         description: "The search query to send to the serper.dev API",
-#         required: Bool.true,
-#     }
-#     Tools.buildTool "serper" "Access to the serper.dev google search API" [queryParam]
+        Ok { utcTime } ->
+            utcTime
+                |> DateTime.fromIsoStr
+                |> Task.fromResult!
+                |> DateTime.addHours -6
+                |> DateTime.toIsoStr
+                |> Task.ok
 
-# serper : Str -> Task Str _
-# serper = \args ->
-#     apiKey = Env.var! "SERPER_API_KEY"
-#     request = {
-#         method: Post,
-#         headers: [{ key: "X-API-KEY", value: apiKey }],
-#         url: "https://google.serper.dev/search",
-#         mimeType: "application/json",
-#         body: args |> Str.toUtf8,
-#         timeout: NoTimeout,
-#     }
-#     when Http.send request |> Task.result! is
-#         Ok response ->
-#             response.body
-#             |> Str.fromUtf8
-#             |> Result.withDefault "Failed to decode API response"
-#             |> Task.ok
-#         Err _ ->
-#             "Failed to get response from serper.dev"
-#             |> Task.ok
+serperTool =
+    queryParam = {
+        name: "q",
+        type: "string",
+        description: "The search query to send to the serper.dev API",
+        required: Bool.true,
+    }
+    Tools.buildTool "serper" "Access to the serper.dev google search API" [queryParam]
+
+serper : Str -> Task Str _
+serper = \args ->
+    apiKey = Env.var! "SERPER_API_KEY"
+    request = {
+        method: Post,
+        headers: [{ key: "X-API-KEY", value: apiKey }],
+        url: "https://google.serper.dev/search",
+        mimeType: "application/json",
+        body: args |> Str.toUtf8,
+        timeout: NoTimeout,
+    }
+    when Http.send request |> Task.result! is
+        Ok response ->
+            response.body
+            |> Str.fromUtf8
+            |> Result.withDefault "Failed to decode API response"
+            |> Task.ok
+        Err _ ->
+            "Failed to get response from serper.dev"
+            |> Task.ok
 
 ## Map of tool names to tool handlers
 toolHandlerMap : Dict Str (Str -> Task Str _)
