@@ -109,7 +109,7 @@ toCdt = \args ->
     utcTime
         |> DateTime.fromIsoStr
         |> Task.fromResult!
-        |> DateTime.addHours -6
+        |> DateTime.addHours -5
         |> DateTime.toIsoStr
         |> Task.ok
 
@@ -135,7 +135,7 @@ toCst = \args ->
     utcTime
         |> DateTime.fromIsoStr
         |> Task.fromResult!
-        |> DateTime.addHours -5
+        |> DateTime.addHours -6
         |> DateTime.toIsoStr
         |> Task.ok
 
