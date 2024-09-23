@@ -9,7 +9,7 @@ This package is still in WIP 🛠️ stages, so the interface may be subject to 
 - Creating and parsing ChatML style requests and responses.
 - Creating and parsing raw prompt style requests and responses.
 - Formatting prompt strings with `[INST]`, `<<SYS>>`, and `<s>` tags for models with llama style fine-tuning.
-- Access to over 230 open and closed source models, including models from OpenAI, Anthropic, Mistral, Meta, Google, and more.
+- Access to over 230 open and closed source models, including models from OpenAI, Anthropic, Mistral, Meta, Google, Microsoft, Perplexity, and more.
 - Most common LLM parameters such as `temperature`, `topP`, `topK`, `repetitionPenalty`, etc.
 - OpenRouter specific features like fallback models and provider preferences.
 - 🚀 __NEW!__ LLM tool use - this enables the AI model to call Roc functions and use the results in its answers. 
