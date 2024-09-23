@@ -9,7 +9,7 @@ This package is still in WIP 🛠️ stages, so the interface may be subject to 
 - Creating and parsing ChatML style requests and responses.
 - Creating and parsing raw prompt style requests and responses.
 - Formatting prompt strings with `[INST]`, `<<SYS>>`, and `<s>` tags for models with llama style fine-tuning.
-- Easy access to over 140 up-to-date models, plus additional older models.
+- Easy access to over 230 open and closed source models, including models from OpenAI, Anthropic, Mistral, Google, and more.
 - Most common LLM parameters such as `temperature`, `topP`, `topK`, `repetitionPenalty`, etc.
 - OpenRouter specific features like fallback models and provider preferences.
 - 🚀 __NEW!__ LLM tool use - this enables the AI model to call Roc functions and use the results in its answers. 
@@ -34,7 +34,7 @@ main =
         Err DecodingError -> Stdout.line! "Error decoding API response"
 ```
 
-For complete example apps, including a full chatbot app, see the examples folder.
+For complete example apps, including a full chatbot app with tool use, see the examples folder.
 
 [roc_badge]: https://img.shields.io/endpoint?url=https%3A%2F%2Fpastebin.com%2Fraw%2FcFzuCCd7
 [roc_link]: https://github.com/roc-lang/roc
