@@ -3,7 +3,7 @@ module { getUtcNow, utcToNanos } -> [utcNowTool, utcNow]
 import InternalTools exposing [Tool, buildTool]
 import iso.DateTime
 
-## tool for the utcNow function
+## Tool for the utcNow function
 utcNowTool : Tool
 utcNowTool = buildTool "utcNow" "Get the current UTC time as an ISO 8601 string" []
 
