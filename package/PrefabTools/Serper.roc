@@ -1,9 +1,15 @@
-module { sendHttpReq, getEnvVar } -> [serper, serperTool]
+module { sendHttpReq, getEnvVar } -> [serper]
 
 import InternalTools exposing [Tool, buildTool]
 
-serperTool : Tool
-serperTool = 
+serper = {
+    name: tool.function.name,
+    handler,
+    tool,
+}
+
+tool : Tool
+tool = 
     queryParam = {
         name: "q",
         type: "string",
@@ -12,8 +18,8 @@ serperTool =
     }
     buildTool "serper" "Access to the serper.dev google search API" [queryParam]
 
-serper : Str -> Task Str _
-serper = \args ->
+handler : Str -> Task Str _
+handler = \args ->
     apiKey = getEnvVar! "SERPER_API_KEY"
     request = {
         method: Post,

@@ -1,7 +1,13 @@
-module { sendHttpReq, getEnvVar } -> [geocoding, geocodingTool, currentWeather, currentWeatherTool]
+module { sendHttpReq, getEnvVar } -> [geocoding, currentWeather]
 
 import json.Json
 import InternalTools exposing [Tool]
+
+geocoding = {
+    name: geocodingTool.function.name,
+    handler: geocodingHandler,
+    tool: geocodingTool,
+}
 
 geocodingTool : Tool
 geocodingTool =
@@ -23,8 +29,8 @@ geocodingTool =
     }
     InternalTools.buildTool "geocoding" "Geocode a location using the openweathermap.org API" [queryParam]
 
-geocoding : Str -> Task Str _
-geocoding = \args ->
+geocodingHandler : Str -> Task Str _
+geocodingHandler = \args ->
     decoded : Decode.DecodeResult { q : Str }
     decoded = args |> Str.toUtf8 |> Decode.fromBytesPartial Json.utf8
     when decoded.result is
@@ -52,6 +58,12 @@ geocoding = \args ->
                     "Failed to get response from openweathermap.org"
                     |> Task.ok
 
+currentWeather = {
+    name: currentWeatherTool.function.name,
+    handler: currentWeatherHandler,
+    tool: currentWeatherTool,
+}
+
 currentWeatherTool : Tool
 currentWeatherTool =
     latParam = {
@@ -78,8 +90,8 @@ currentWeatherTool =
     }
     InternalTools.buildTool "currentWeather" "Get the current weather for a location using the openweathermap.org API" [latParam, lonParam, unitsParam]
 
-currentWeather : Str -> Task Str _
-currentWeather = \args ->
+currentWeatherHandler : Str -> Task Str _
+currentWeatherHandler = \args ->
     decoded : Decode.DecodeResult { lat : F32, lon : F32, units : Str }
     decoded = args |> Str.toUtf8 |> Decode.fromBytesPartial Json.utf8
     when decoded.result is

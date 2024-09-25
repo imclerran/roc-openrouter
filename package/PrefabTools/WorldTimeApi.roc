@@ -1,10 +1,16 @@
-module { sendHttpReq } -> [currentTime, currentTimeTool]
+module { sendHttpReq } -> [currentTime]
 
 import InternalTools exposing [Tool]
 import json.Json
 
-currentTimeTool : Tool
-currentTimeTool =
+currentTime = {
+    name: tool.function.name,
+    handler,
+    tool,
+}
+
+tool : Tool
+tool =
     tzParam = {
         name: "tz",
         type: "string",
@@ -22,8 +28,8 @@ currentTimeTool =
         """ 
         [tzParam]
 
-currentTime : Str -> Task Str _
-currentTime = \args ->
+handler : Str -> Task Str _
+handler = \args ->
     decoded : Decode.DecodeResult { tz : Str }
     decoded = args |> Str.toUtf8 |> Decode.fromBytesPartial Json.utf8
     when decoded.result is

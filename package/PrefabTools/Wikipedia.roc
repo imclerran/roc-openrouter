@@ -1,9 +1,15 @@
-module { sendHttpReq } -> [wikipediaSearch, wikipediaSearchTool, wikipediaParse, wikipediaParseTool]
+module { sendHttpReq } -> [wikipediaSearch, wikipediaParse]
 
 import json.Json
 import InternalTools exposing [Tool]
 
 baseUrl = "https://en.wikipedia.org/w/api.php"
+
+wikipediaSearch = {
+    name: wikipediaSearchTool.function.name,
+    handler: wikipediaSearchHandler,
+    tool: wikipediaSearchTool,
+}
 
 ## Tool for the wikepedia search function
 wikipediaSearchTool : Tool
@@ -34,8 +40,8 @@ wikipediaSearchTool =
         [queryParam, limitParam]
                     
 ## Handler for the wikipedia search tool
-wikipediaSearch : Str -> Task Str _
-wikipediaSearch = \args ->
+wikipediaSearchHandler : Str -> Task Str _
+wikipediaSearchHandler = \args ->
     decoded : Decode.DecodeResult { search : Str, limit : U32 }
     decoded = args |> Str.toUtf8 |> Decode.fromBytesPartial Json.utf8
     when decoded.result is
@@ -61,6 +67,12 @@ wikipediaSearch = \args ->
                 Err _ ->
                     "Failed to get response from Wikipedia"
                     |> Task.ok
+
+wikipediaParse = {
+    name: wikipediaParseTool.function.name,
+    handler: wikipediaParseHandler,
+    tool: wikipediaParseTool,
+}
                     
 ## Tool for the wikipedia parse function
 wikipediaParseTool : Tool
@@ -82,8 +94,8 @@ wikipediaParseTool =
         [titleParam]
                     
 ## Handler for the wikipedia parse tool
-wikipediaParse : Str -> Task Str _
-wikipediaParse = \args ->
+wikipediaParseHandler : Str -> Task Str _
+wikipediaParseHandler = \args ->
     decoded : Decode.DecodeResult { page : Str }
     decoded = args |> Str.toUtf8 |> Decode.fromBytesPartial Json.utf8
     when decoded.result is
