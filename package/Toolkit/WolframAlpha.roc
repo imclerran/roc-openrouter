@@ -1,33 +1,35 @@
 module { sendHttpReq, getEnvVar } -> [shortAnswer]
 
+import json.Json
 import InternalTools exposing [Tool]
+import Shared exposing [urlEncode]
 
 shortAnswer = {
-    name: tool.function.name,
+    name: shortAnswerTool.function.name,
     handler: shortAnswerHandler,
     tool: shortAnswerTool,
 }
 
-ShortAnswerTool : Tool
+shortAnswerTool : Tool
 shortAnswerTool =
     inputParam = {
         name: "input",
         type: "string",
-        description: 
-            """
-            The question to ask Wolfram Alpha. Must Be URL encoded.
-            """,
+        description:
+        """
+        The question to ask Wolfram Alpha.
+        """,
         required: Bool.true,
     }
-    InternalTools.buildTool 
-        "wolframShortAnswer" 
+    InternalTools.buildTool
+        "wolframShortAnswer"
         """
         Ask Wolfram Alpha a question and get a short answer. 
         Wolfram can answer questions in many categories, including but not limited to:
         Mathematical computations, unit conversions, fact-based queries, scientific 
         questions, weather and location based data, date and time queries, financial 
         and economic data, historical events, and general knowledge questions.
-        """ 
+        """
         [inputParam]
 
 shortAnswerHandler : Str -> Task Str _
@@ -43,7 +45,7 @@ shortAnswerHandler = \args ->
             request = {
                 method: Get,
                 headers: [],
-                url: "http://api.wolframalpha.com/v1/result?i=$(input)&appid=$(appId)",
+                url: "http://api.wolframalpha.com/v1/result?i=$(urlEncode input)&appid=$(appId)",
                 mimeType: "application/json",
                 body: [],
                 timeout: NoTimeout,
