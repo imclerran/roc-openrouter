@@ -1,4 +1,15 @@
-module [ApiError, TimeoutConfig, ErrorResponse, RequestObject, ResponseFormat, dropLeadingGarbage, decodeErrorResponse, optionToStr, optionToList]
+module [
+    ApiError,
+    TimeoutConfig,
+    ErrorResponse,
+    RequestObject,
+    ResponseFormat,
+    dropLeadingGarbage,
+    decodeErrorResponse,
+    optionToStr,
+    optionToList,
+    urlEncode,
+]
 
 import json.Json
 import json.Option exposing [Option]
@@ -59,3 +70,50 @@ optionToList = \opt ->
     when Option.get opt is
         Some list -> list
         None -> []
+
+urlEncode : Str -> Str
+urlEncode = \str ->
+    str
+    |> Str.toUtf8
+    |> List.map \char ->
+        Dict.get urlEncodeDict char
+        |> Result.withDefault
+            ([char] |> Str.fromUtf8 |> Result.withDefault "")
+    |> Str.joinWith ""
+
+urlEncodeDict : Dict U8 Str
+urlEncodeDict =
+    Dict.empty {}
+    |> Dict.insert ' ' "%20"
+    |> Dict.insert '!' "%21"
+    |> Dict.insert '"' "%22"
+    |> Dict.insert '#' "%23"
+    |> Dict.insert '$' "%24"
+    |> Dict.insert '%' "%25"
+    |> Dict.insert '&' "%26"
+    |> Dict.insert '\'' "%27"
+    |> Dict.insert '(' "%28"
+    |> Dict.insert ')' "%29"
+    |> Dict.insert '*' "%2A"
+    |> Dict.insert '+' "%2B"
+    |> Dict.insert ',' "%2C"
+    |> Dict.insert '-' "%2D"
+    |> Dict.insert '.' "%2E"
+    |> Dict.insert '/' "%2F"
+    |> Dict.insert ':' "%3A"
+    |> Dict.insert ';' "%3B"
+    |> Dict.insert '<' "%3C"
+    |> Dict.insert '=' "%3D"
+    |> Dict.insert '>' "%3E"
+    |> Dict.insert '?' "%3F"
+    |> Dict.insert '@' "%40"
+    |> Dict.insert '[' "%5B"
+    |> Dict.insert '\\' "%5C"
+    |> Dict.insert ']' "%5D"
+    |> Dict.insert '^' "%5E"
+    |> Dict.insert '_' "%5F"
+    |> Dict.insert '`' "%60"
+    |> Dict.insert '{' "%7B"
+    |> Dict.insert '|' "%7C"
+    |> Dict.insert '}' "%7D"
+    |> Dict.insert '~' "%7E"

@@ -85,28 +85,6 @@ callTool = \toolCall, parseArgsAndCall ->
         name: Option.some toolCall.function.name,
     }
 
-## Build a tool object with the given name, description, and parameters.
-buildTool : Str, Str, List { name : Str, type : Str, description : Str, required : Bool } -> Tool
-buildTool = \name, description, parameters ->
-    properties =
-        parameters
-        |> List.map \{ name: n, type: t, description: d } -> (n, { type: t, description: d })
-        |> Dict.fromList
-    {
-        type: "function",
-        function: {
-            name,
-            description,
-            parameters: {
-                type: "object",
-                properties,
-            },
-            required: parameters
-            |> List.dropIf \param -> !param.required
-            |> List.map \param -> param.name,
-        },
-    }
-
 ## Get the messages from the response and return the updated list of messages.
 getMessagesFromResponse : List Message, Result HttpResponse _ -> List Message
 getMessagesFromResponse = \messages, responseRes ->
@@ -117,3 +95,6 @@ getMessagesFromResponse = \messages, responseRes ->
                 _ -> messages
 
         Err (HttpErr _) -> messages
+
+## Build a tool object with the given name, description, and parameters.
+buildTool = InternalTools.buildTool

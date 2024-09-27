@@ -5,6 +5,7 @@ module [
     ToolChoice,
     injectTools,
     injectToolChoice,
+    buildTool,
 ]
 
 import json.Json
@@ -91,3 +92,24 @@ propertiesToJson = \properties ->
         """
     |> Str.joinWith ", "
     |> \dictContent -> "{$(dictContent)}"
+
+buildTool : Str, Str, List { name : Str, type : Str, description : Str, required : Bool } -> Tool
+buildTool = \name, description, parameters ->
+    properties =
+        parameters
+        |> List.map \{ name: n, type: t, description: d } -> (n, { type: t, description: d })
+        |> Dict.fromList
+    {
+        type: "function",
+        function: {
+            name,
+            description,
+            parameters: {
+                type: "object",
+                properties,
+            },
+            required: parameters
+            |> List.dropIf \param -> !param.required
+            |> List.map \param -> param.name,
+        },
+    }
