@@ -1,7 +1,5 @@
 app [main] {
     cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.15.0/SlwdbJ-3GR7uBWQo6zlmYWNYOxnvo8r6YABXD-45UOw.tar.br",
-    json: "https://github.com/lukewilliamboswell/roc-json/releases/download/0.10.2/FH4N0Sw-JSFXJfG3j54VEDPtXOoN-6I9v_IA8S18IGk.tar.br",
-    iso: "https://github.com/imclerran/roc-isodate/releases/download/v0.5.0/ptg0ElRLlIqsxMDZTTvQHgUSkNrUSymQaGwTfv0UEmk.tar.br",
     ansi: "https://github.com/lukewilliamboswell/roc-ansi/releases/download/0.6/tzLZlg6lNmgU4uYtQ_zCmSr1AptHxZ8VBfE-O9JCudw.tar.br",
     ai: "../package/main.roc",
 }
@@ -14,8 +12,6 @@ import cli.Env
 import ai.Chat exposing [Message]
 import ai.Tools { sendHttpReq: Http.send }
 import ai.Toolkit.Serper { sendHttpReq: Http.send, getEnvVar: Env.var } exposing [serper]
-
-
 import ansi.Core as Ansi
 
 main : Task {} _
