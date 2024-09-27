@@ -12,7 +12,8 @@ This package is still in WIP 🛠️ stages, so the interface may be subject to 
 - Access to over 230 open and closed source models, including models from OpenAI, Anthropic, Mistral, Meta, Google, Microsoft, Perplexity, and more.
 - Most common LLM parameters such as `temperature`, `topP`, `topK`, `repetitionPenalty`, etc.
 - OpenRouter specific features like fallback models and provider preferences.
-- 🚀 __NEW!__ LLM tool use - this enables the AI model to call Roc functions and use the results in its answers. 
+- 🚀 __NEW!__ LLM tool use - this enables the AI model to call Roc functions and use the results in its answers.
+  - Includes a collection of prebuilt tools, or you can build your own
 
 
 ## Example
