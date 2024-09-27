@@ -2,6 +2,7 @@ module { sendHttpReq } -> [wikipediaSearch, wikipediaParse]
 
 import json.Json
 import InternalTools exposing [Tool]
+import Shared exposing [urlEncode]
 
 baseUrl = "https://en.wikipedia.org/w/api.php"
 
@@ -20,7 +21,7 @@ wikipediaSearchTool =
         type: "string",
         description: 
             """
-            The search query to use. This can be a single word or a phrase, however it must be URL encoded.
+            The search query to use. This can be a single word or a phrase.
             """,
         required: Bool.true,
     }
@@ -53,7 +54,7 @@ wikipediaSearchHandler = \args ->
             request = {
                 method: Get,
                 headers: [],
-                url: "$(baseUrl)?action=opensearch&search=$(search)&limit=$(Num.toStr limit)&namespace=0&format=json",
+                url: "$(baseUrl)?action=opensearch&search=$(urlEncode search)&limit=$(Num.toStr limit)&namespace=0&format=json",
                 mimeType: "",
                 body: [],
                 timeout: NoTimeout,
