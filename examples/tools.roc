@@ -23,8 +23,11 @@ main =
     Task.loop! { previousMessages: [] } \{ previousMessages } -> ## Task.loop function must be inline due to roc issue #7116
         Stdout.write! "You: "
         messages = Chat.appendUserMessage previousMessages Stdin.line!
-        response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
-        updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
+        updatedMessages = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+            |> updateMessagesFromResponse messages
+            |> Tools.handleToolCalls! client toolHandlerMap
+        # response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+        # updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
         printLastMessage! updatedMessages
         Task.ok (Step { previousMessages: updatedMessages })
 
