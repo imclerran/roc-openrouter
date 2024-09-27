@@ -1,4 +1,4 @@
-module { pathFromStr, pathToStr, listDir, isDir, readFile} -> [listDirectory, listFileTree, readFileContents]
+module { pathFromStr, pathToStr, listDir, isDir, readFile } -> [listDirectory, listFileTree, readFileContents]
 
 import json.Json
 import InternalTools exposing [Tool, buildTool]
@@ -15,8 +15,11 @@ listDirectoryTool : Tool
 listDirectoryTool = 
     pathParam = {
         name: "path",
-        type: "Str",
-        description: "The unix style path to a directory. `..` is not allowed.",
+        type: "string",
+        description: 
+            """
+            The relative unix style path to a directory. `..` is not allowed. Must begin with `.`
+            """,
         required: Bool.true,
     }
     buildTool "listDirectory" "List the contents of a directory" [pathParam]
@@ -34,6 +37,8 @@ listDirectoryHandler = \args ->
         Ok { path } ->
             if path |> Str.contains ".." then
                 Task.ok "Invalid path: `..` is not allowed"
+            else if path |> Str.startsWith "/" then
+                Task.ok "Invalid path: must be a relative path"
             else
                 listDir (pathFromStr path)
                     |> Task.result!
@@ -54,8 +59,11 @@ listFileTreeTool : Tool
 listFileTreeTool = 
     pathParam = {
         name: "path",
-        type: "Str",
-        description: "The unix style path to a directory. `..` is not allowed.",
+        type: "string",
+        description: 
+            """
+            The relative unix style path to a directory. `..` is not allowed. Must begin with `.`
+            """,
         required: Bool.true,
     }
     buildTool "listFileTree" "List the contents of a directory and all subdirectories" [pathParam]
@@ -72,8 +80,11 @@ listFileTreeHandler = \args ->
         Ok { path } ->
             if path |> Str.contains ".." then
                 Task.ok "Invalid path: `..` is not allowed"
+            else if path |> Str.startsWith "/" then
+                Task.ok "Invalid path: must be a relative path"
             else
-                fileTreeHelper (path |> pathFromStr |> listDir!) "" 0
+                dirContents = path |> pathFromStr |> listDir |> Task.result! |> Result.withDefault []
+                fileTreeHelper dirContents "" 0
 
 ## Recursive helper function for listFileTreeHandler
 fileTreeHelper : List path, Str, U64 -> Task Str _
@@ -87,7 +98,9 @@ fileTreeHelper = \paths, accumulation, depth ->
             Task.ok accumulation
 
         [path, .. as pathsTail] ->
-            if isDir! path then
+            if pathToStr path |> Str.contains "/." then
+                fileTreeHelper pathsTail accumulation depth
+            else if isDir! path then
                 subcontents = fileTreeHelper! (listDir! path) "" (depth + 1) |> prependNewline
                 newString = buildStr accumulation (pathToStr path) subcontents
                 fileTreeHelper pathsTail newString depth
@@ -107,8 +120,11 @@ readFileContentsTool : Tool
 readFileContentsTool =
     pathParam = {
         name: "path",
-        type: "Str",
-        description: "The unix style path to a file. `..` is not allowed.",
+        type: "string",
+        description: 
+            """
+            The relative unix style path to a directory. `..` is not allowed. Must begin with `.`
+            """,
         required: Bool.true,
     }
     buildTool "readFileContents" "Read the contents of a file. Must be a plain text file (any extension)." [pathParam]
@@ -125,11 +141,11 @@ readFileContentsHandler = \args ->
         Ok { path } ->
             if path |> Str.contains ".." then
                 Task.ok "Invalid path: `..` is not allowed"
+            else if path |> Str.startsWith "/" then
+                Task.ok "Invalid path: must be a relative path"
             else
-                pathFromStr path
+                path
                     |> readFile
                     |> Task.result!
-                    |> Result.mapErr (\_ -> "Failed to read file")
-                    |> Result.map pathToStr
                     |> Result.withDefault "Failed to read file"
                     |> Task.ok
