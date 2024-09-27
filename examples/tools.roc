@@ -11,13 +11,14 @@ import cli.Env
 
 import ai.Chat exposing [Message]
 import ai.Tools { sendHttpReq: Http.send }
+import ai.Toolkit.OpenWeatherMap { sendHttpReq: Http.send, getEnvVar: Env.var } exposing [geocoding, currentWeather]
 import ai.Toolkit.Serper { sendHttpReq: Http.send, getEnvVar: Env.var } exposing [serper]
 import ansi.Core as Ansi
 
 main : Task {} _
 main =
     apiKey = getApiKey!
-    client = Chat.initClient { apiKey, model: "openai/gpt-4o", tools: [serper.tool] }
+    client = Chat.initClient { apiKey, model: "openai/gpt-4o", tools: [geocoding.tool, currentWeather.tool, serper.tool] }
     Stdout.line! ("Assistant: Ask me about the weather, or anything on the web!\n" |> Ansi.color { fg: Standard Cyan })
     Task.loop! { previousMessages: [] } \{ previousMessages } -> ## Task.loop function must be inline due to roc issue #7116
         Stdout.write! "You: "
@@ -68,4 +69,9 @@ getMessagesFromResponse = \messages, responseRes ->
 
 ## Map of tool names to tool handlers
 toolHandlerMap : Dict Str (Str -> Task Str _)
-toolHandlerMap = Dict.fromList [(serper.name, serper.handler)]
+toolHandlerMap = 
+    Dict.fromList [
+        (geocoding.name, geocoding.handler),
+        (currentWeather.name, currentWeather.handler),
+        (serper.name, serper.handler),
+    ]
