@@ -1,11 +1,11 @@
-module { sendHttpReq, getEnvVar } -> [shortAnswer]
+module { sendHttpReq, getEnvVar } -> [wolframShortAnswer]
 
 import json.Json
 import InternalTools exposing [Tool]
 import Shared exposing [urlEncode]
 
 ## Expose name, handler and tool for shortAnswer
-shortAnswer = {
+wolframShortAnswer = {
     name: shortAnswerTool.function.name,
     handler: shortAnswerHandler,
     tool: shortAnswerTool,
