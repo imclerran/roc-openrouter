@@ -3,12 +3,14 @@ module { sendHttpReq } -> [currentTime]
 import InternalTools exposing [Tool]
 import json.Json
 
+## Expose name, handler and tool for the currentTime
 currentTime = {
     name: tool.function.name,
     handler,
     tool,
 }
 
+## Tool definition for the currentTime function
 tool : Tool
 tool =
     tzParam = {
@@ -28,6 +30,7 @@ tool =
         """ 
         [tzParam]
 
+## Handler for the currentTime tool
 handler : Str -> Task Str _
 handler = \args ->
     decoded : Decode.DecodeResult { tz : Str }

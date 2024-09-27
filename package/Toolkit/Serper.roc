@@ -2,12 +2,14 @@ module { sendHttpReq, getEnvVar } -> [serper]
 
 import InternalTools exposing [Tool, buildTool]
 
+## Expose name, handler and tool for serper
 serper = {
     name: tool.function.name,
     handler,
     tool,
 }
 
+## Tool definition for the serper function
 tool : Tool
 tool = 
     queryParam = {
@@ -18,6 +20,7 @@ tool =
     }
     buildTool "serper" "Access to the serper.dev google search API" [queryParam]
 
+## Handler for the serper tool
 handler : Str -> Task Str _
 handler = \args ->
     apiKey = getEnvVar! "SERPER_API_KEY"

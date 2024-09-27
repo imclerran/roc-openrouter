@@ -4,12 +4,14 @@ import json.Json
 import InternalTools exposing [Tool]
 import Shared exposing [urlEncode]
 
+## Expose name, handler and tool for shortAnswer
 shortAnswer = {
     name: shortAnswerTool.function.name,
     handler: shortAnswerHandler,
     tool: shortAnswerTool,
 }
 
+## Tool definition for the shortAnswer function
 shortAnswerTool : Tool
 shortAnswerTool =
     inputParam = {
@@ -32,6 +34,7 @@ shortAnswerTool =
         """
         [inputParam]
 
+## Handler for the shortAnswer tool
 shortAnswerHandler : Str -> Task Str _
 shortAnswerHandler = \args ->
     decoded : Decode.DecodeResult { input : Str }

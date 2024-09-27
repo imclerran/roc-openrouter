@@ -5,13 +5,14 @@ import InternalTools exposing [Tool]
 
 baseUrl = "https://en.wikipedia.org/w/api.php"
 
+## Expose name, handler and tool for the wikipediaSarch
 wikipediaSearch = {
     name: wikipediaSearchTool.function.name,
     handler: wikipediaSearchHandler,
     tool: wikipediaSearchTool,
 }
 
-## Tool for the wikepedia search function
+## Tool definition for the wikepedia search function
 wikipediaSearchTool : Tool
 wikipediaSearchTool =
     queryParam = {
@@ -68,13 +69,14 @@ wikipediaSearchHandler = \args ->
                     "Failed to get response from Wikipedia"
                     |> Task.ok
 
+## Expose name, handler and tool for the wikipediaParse
 wikipediaParse = {
     name: wikipediaParseTool.function.name,
     handler: wikipediaParseHandler,
     tool: wikipediaParseTool,
 }
                     
-## Tool for the wikipedia parse function
+## Tool definition for the wikipedia parse function
 wikipediaParseTool : Tool
 wikipediaParseTool =
     titleParam = {

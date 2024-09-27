@@ -3,12 +3,14 @@ module { pathFromStr, pathToStr, listDir, isDir, readFile} -> [listDirectory, li
 import json.Json
 import InternalTools exposing [Tool, buildTool]
 
+## Expose name, handler and tool for listDirectory
 listDirectory = {
     name: listDirectoryTool.function.name,
     handler: listDirectoryHandler,
     tool: listDirectoryTool,
 }
 
+## Tool definition for the listDirectory function
 listDirectoryTool : Tool
 listDirectoryTool = 
     pathParam = {
@@ -20,6 +22,7 @@ listDirectoryTool =
     buildTool "listDirectory" "List the contents of a directory" [pathParam]
 
 
+## Handler for the listDirectory tool
 listDirectoryHandler : Str -> Task Str _
 listDirectoryHandler = \args ->
     decoded : Decode.DecodeResult { path : Str }
@@ -39,12 +42,14 @@ listDirectoryHandler = \args ->
                     |> Str.joinWith "\n"
                     |> Task.ok
 
+## Expose name, handler and tool for listFileTree
 listFileTree = {
     name: listFileTreeTool.function.name,
     handler: listFileTreeHandler,
     tool: listFileTreeTool,
 }
 
+## Tool definition for the listFileTree function
 listFileTreeTool : Tool
 listFileTreeTool = 
     pathParam = {
@@ -55,6 +60,7 @@ listFileTreeTool =
     }
     buildTool "listFileTree" "List the contents of a directory and all subdirectories" [pathParam]
 
+## Handler for the listFileTree tool
 listFileTreeHandler : Str -> Task Str _
 listFileTreeHandler = \args ->
     decoded : Decode.DecodeResult { path : Str }
@@ -69,6 +75,7 @@ listFileTreeHandler = \args ->
             else
                 fileTreeHelper (path |> pathFromStr |> listDir!) "" 0
 
+## Recursive helper function for listFileTreeHandler
 fileTreeHelper : List path, Str, U64 -> Task Str _
 fileTreeHelper = \paths, accumulation, depth ->
     prependNewline = \str -> if Str.isEmpty str then str else Str.concat "\n" str
@@ -88,12 +95,14 @@ fileTreeHelper = \paths, accumulation, depth ->
                 newString = buildStr accumulation (pathToStr path) ""
                 fileTreeHelper pathsTail newString depth
 
+## Expose name, handler and tool for readFileContents
 readFileContents = {
     name: readFileContentsTool.function.name,
     handler: readFileContentsHandler,
     tool: readFileContentsTool,
 }
 
+## Tool definition for the readFileContents function
 readFileContentsTool : Tool
 readFileContentsTool =
     pathParam = {
@@ -104,6 +113,7 @@ readFileContentsTool =
     }
     buildTool "readFileContents" "Read the contents of a file. Must be a plain text file (any extension)." [pathParam]
 
+## Handler for the readFileContents tool
 readFileContentsHandler : Str -> Task Str _
 readFileContentsHandler = \args ->
     decoded : Decode.DecodeResult { path : Str }

@@ -3,12 +3,14 @@ module { sendHttpReq, getEnvVar } -> [geocoding, currentWeather]
 import json.Json
 import InternalTools exposing [Tool]
 
+## Expose name, handler and tool for geocoding
 geocoding = {
     name: geocodingTool.function.name,
     handler: geocodingHandler,
     tool: geocodingTool,
 }
 
+## Tool definition for the geocoding function
 geocodingTool : Tool
 geocodingTool =
     queryParam = {
@@ -29,6 +31,7 @@ geocodingTool =
     }
     InternalTools.buildTool "geocoding" "Geocode a location using the openweathermap.org API" [queryParam]
 
+## Handler for the geocoding tool
 geocodingHandler : Str -> Task Str _
 geocodingHandler = \args ->
     decoded : Decode.DecodeResult { q : Str }
@@ -58,12 +61,14 @@ geocodingHandler = \args ->
                     "Failed to get response from openweathermap.org"
                     |> Task.ok
 
+## Expose name, handler and tool for currentWeather
 currentWeather = {
     name: currentWeatherTool.function.name,
     handler: currentWeatherHandler,
     tool: currentWeatherTool,
 }
 
+## Tool definition for the currentWeather function
 currentWeatherTool : Tool
 currentWeatherTool =
     latParam = {
@@ -90,6 +95,7 @@ currentWeatherTool =
     }
     InternalTools.buildTool "currentWeather" "Get the current weather for a location using the openweathermap.org API" [latParam, lonParam, unitsParam]
 
+## Handler for the currentWeather tool
 currentWeatherHandler : Str -> Task Str _
 currentWeatherHandler = \args ->
     decoded : Decode.DecodeResult { lat : F32, lon : F32, units : Str }
