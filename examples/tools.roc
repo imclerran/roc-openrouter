@@ -22,15 +22,11 @@ main =
     Stdout.line! ("Assistant: Ask me about the weather, or anything on the web!\n" |> Ansi.color { fg: Standard Cyan })
     Task.loop! { previousMessages: [] } \{ previousMessages } -> ## Task.loop function must be inline due to roc issue #7116
         Stdout.write! "You: "
-        query = Stdin.line!
-        when query is
-            "goodbye" | "quit" | "exit" -> Task.ok (Done {})
-            _ ->
-                messages = Chat.appendUserMessage previousMessages query
-                response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
-                updatedMessages = getMessagesFromResponse messages response |> Tools.handleToolCalls! client toolHandlerMap
-                printLastMessage! updatedMessages
-                Task.ok (Step { previousMessages: updatedMessages })
+        messages = Chat.appendUserMessage previousMessages Stdin.line!
+        response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+        updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
+        printLastMessage! updatedMessages
+        Task.ok (Step { previousMessages: updatedMessages })
 
 ## Get the API key from the environmental variable
 getApiKey : Task Str _
@@ -53,8 +49,8 @@ printLastMessage = \messages ->
         _ -> Task.ok {}
 
 ## decode the response from the OpenRouter API and append the first message to the list of messages
-getMessagesFromResponse : List Message, Result Http.Response _ -> List Message
-getMessagesFromResponse = \messages, responseRes ->
+updateMessagesFromResponse : Result Http.Response _, List Message -> List Message
+updateMessagesFromResponse = \responseRes, messages ->
     when responseRes is
         Ok response ->
             when Chat.decodeTopMessageChoice response.body is
@@ -69,7 +65,7 @@ getMessagesFromResponse = \messages, responseRes ->
 
 ## Map of tool names to tool handlers
 toolHandlerMap : Dict Str (Str -> Task Str _)
-toolHandlerMap = 
+toolHandlerMap =
     Dict.fromList [
         (geocoding.name, geocoding.handler),
         (currentWeather.name, currentWeather.handler),
