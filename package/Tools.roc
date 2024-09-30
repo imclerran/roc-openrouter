@@ -100,9 +100,9 @@ dispatchToolCalls = \toolCallList, toolHandlerMap, { logger ? (\_ -> Task.ok {})
                 toolName = toolCall.function.name
                 when toolHandlerMap |> Dict.get toolName is
                     Ok handler ->
-                        log! logger logLevel (Basic "Calling tool: $(toolName)")
+                        logWith! logger logLevel (Basic "Calling tool: $(toolName)")
                         message = callTool! toolCall handler
-                        log! logger logLevel (Verbose "Tool answered with:\n $(message.content)")
+                        logWith! logger logLevel (Verbose "Tool answered with:\n $(message.content)")
                         updatedToolMessages = List.append toolMessages message
                         Task.ok (Step { toolCalls: List.dropFirst toolCalls 1, toolMessages: updatedToolMessages })
 
@@ -112,8 +112,8 @@ dispatchToolCalls = \toolCallList, toolHandlerMap, { logger ? (\_ -> Task.ok {})
             Err ListWasEmpty -> Task.ok (Done toolMessages)
 
 ## Log the given message based on the specified log level.
-log : (Str -> Task {} _), LogLevel, LogMessage -> Task {} _
-log = \logger, logLevel, logMessage ->
+logWith : (Str -> Task {} _), LogLevel, LogMessage -> Task {} _
+logWith = \logger, logLevel, logMessage ->
     when logMessage is
         Basic text if logLevel != None -> logger text
         Verbose text if logLevel == Verbose -> logger text
