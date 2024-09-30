@@ -22,13 +22,8 @@ HttpResponse : {
     url : Str,
     statusCode : U16,
     statusText : Str,
-    headers : List HttpHeader,
+    headers : List { key : Str, value : Str },
     body : List U8,
-}
-
-HttpHeader : {
-    key : Str,
-    value : Str,
 }
 
 ## Using the given toolHandlerMap, check the last message for tool calls, call all
