@@ -37,31 +37,7 @@ HttpHeader : {
     value : Str,
 }
 
-## Using the given toolHandlerMap, check the last message for tool calls, call all
-## the tools in the tool call list, send the results back to the model, and handle
-## any additional tool calls that may have been generated. If or when no more tool
-## calls are present, return the updated list of messages.
-##
-## The toolHandlerMap is a dictionary mapping tool function names to functions
-## that take the arguments as a JSON string, parse the json, and return the tool's response.
-# handleToolCalls : List Message, Client, Dict Str (Str -> Task Str _) -> Task (List Message) _
-# handleToolCalls = \messages, client, toolHandlerMap ->
-#     handleToolCallsLogged messages client toolHandlerMap (\_ -> Task.ok {}) None
-# when List.last messages is
-#     Ok { role, toolCalls: tcs } if role == "assistant" ->
-#         when Option.get tcs is
-#             Some toolCalls ->
-#                 toolMessages = dispatchToolCalls! toolCalls toolHandlerMap
-#                 messagesWithTools = List.join [messages, toolMessages]
-#                 response = sendHttpReq (Chat.buildHttpRequest client messagesWithTools {}) |> Task.result!
-#                 messagesWithResponse = getMessagesFromResponse messagesWithTools response
-#                 handleToolCalls messagesWithResponse client toolHandlerMap
-
-#             None -> Task.ok messages
-
-#     _ -> Task.ok messages
-
-# Logger err : Str -> Task {} err
+Logger err: Str -> Task {} err
 LogLevel : [None, Basic, Verbose]
 LogMessage : [Basic Str, Verbose Str]
 
@@ -72,7 +48,7 @@ LogMessage : [Basic Str, Verbose Str]
 ##
 ## The toolHandlerMap is a dictionary mapping tool function names to functions
 ## that take the arguments as a JSON string, parse the json, and return the tool's response.
-handleToolCalls : List Message, Client, Dict Str (Str -> Task Str _), { logger ? (Str -> Task {} _), logLevel ? LogLevel } -> Task (List Message) _
+handleToolCalls : List Message, Client, Dict Str (Str -> Task Str _), { logger ? Logger err, logLevel ? LogLevel } -> Task (List Message) _
 handleToolCalls = \messages, client, toolHandlerMap, { logger ? (\_ -> Task.ok {}), logLevel ? None } ->
     when List.last messages is
         Ok { role, toolCalls: tcs } if role == "assistant" ->
@@ -92,7 +68,7 @@ handleToolCalls = \messages, client, toolHandlerMap, { logger ? (\_ -> Task.ok {
 ##
 ## The toolHandlerMap is a dictionary mapping tool function names to functions
 ## that take the arguments as a JSON string, parse the json, and return the tool's response.
-dispatchToolCalls : List ToolCall, Dict Str (Str -> Task Str _), { logger ? (Str -> Task {} _), logLevel ? LogLevel} -> Task (List Message) _
+dispatchToolCalls : List ToolCall, Dict Str (Str -> Task Str _), { logger ? Logger err, logLevel ? LogLevel} -> Task (List Message) _
 dispatchToolCalls = \toolCallList, toolHandlerMap, { logger ? (\_ -> Task.ok {}), logLevel ? None } ->
     Task.loop { toolCalls: toolCallList, toolMessages: [] } \{ toolCalls, toolMessages } ->
         when List.first toolCalls is
@@ -112,7 +88,7 @@ dispatchToolCalls = \toolCallList, toolHandlerMap, { logger ? (\_ -> Task.ok {})
             Err ListWasEmpty -> Task.ok (Done toolMessages)
 
 ## Log the given message based on the specified log level.
-logWith : (Str -> Task {} _), LogLevel, LogMessage -> Task {} _
+logWith : Logger err, LogLevel, LogMessage -> Task {} err
 logWith = \logger, logLevel, logMessage ->
     when logMessage is
         Basic text if logLevel != None -> logger text
