@@ -64,8 +64,8 @@ dispatchToolCalls = \toolCallList, toolHandlerMap ->
         when List.first toolCalls is
             Ok toolCall ->
                 when toolHandlerMap |> Dict.get toolCall.function.name is
-                    Ok parseAndCall ->
-                        toolMessage = callTool! toolCall parseAndCall
+                    Ok handler ->
+                        toolMessage = callTool! toolCall handler
                         updatedToolMessages = List.append toolMessages toolMessage
                         Task.ok (Step { toolCalls: (List.dropFirst toolCalls 1), toolMessages: updatedToolMessages })
                     
@@ -76,8 +76,8 @@ dispatchToolCalls = \toolCallList, toolHandlerMap ->
 
 ## Call the given tool function with the given arguments and return the tool message.
 callTool : ToolCall, (Str -> Task Str err) -> Task Message err
-callTool = \toolCall, parseArgsAndCall ->
-    Task.map (parseArgsAndCall toolCall.function.arguments) \content -> {
+callTool = \toolCall, handler ->
+    Task.map (handler toolCall.function.arguments) \content -> {
         role: "tool",
         content,
         toolCalls: Option.none {},
