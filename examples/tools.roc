@@ -22,8 +22,9 @@ main =
     Stdout.line! ("Assistant: Ask me about the weather, or anything on the web!\n" |> Ansi.color { fg: Standard Cyan })
     Task.loop! { previousMessages: [] } \{ previousMessages } -> ## Task.loop function must be inline due to roc issue #7116
         Stdout.write! "You: "
-        messages = Chat.appendUserMessage previousMessages Stdin.line!
-        updatedMessages = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+        messages = Chat.appendUserMessage previousMessages "" #Stdin.line!
+        updatedMessages = Http.send (Chat.buildHttpRequest client messages {}) 
+            |> Task.result!
             |> updateMessagesFromResponse messages
             |> Tools.handleToolCalls! client toolHandlerMap
         # response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
