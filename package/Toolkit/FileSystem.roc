@@ -1,4 +1,9 @@
-module { pathFromStr, pathToStr, listDir, isDir, readFile } -> [listDirectory, listFileTree, readFileContents]
+module { pathFromStr, pathToStr, listDir, isDir, readFile, writeUtf8 } -> [
+    listDirectory,
+    listFileTree,
+    readFileContents,
+    writeFileContents,
+]
 
 import json.Json
 import InternalTools exposing [Tool, buildTool]
@@ -12,18 +17,14 @@ listDirectory = {
 
 ## Tool definition for the listDirectory function
 listDirectoryTool : Tool
-listDirectoryTool = 
+listDirectoryTool =
     pathParam = {
         name: "path",
         type: "string",
-        description: 
-            """
-            The relative unix style path to a directory. `..` is not allowed. Must begin with `.`
-            """,
+        description: "The relative unix style path to a directory. `..` is not allowed. Must begin with `.`",
         required: Bool.true,
     }
     buildTool "listDirectory" "List the contents of a directory" [pathParam]
-
 
 ## Handler for the listDirectory tool
 listDirectoryHandler : Str -> Task Str _
@@ -56,14 +57,11 @@ listFileTree = {
 
 ## Tool definition for the listFileTree function
 listFileTreeTool : Tool
-listFileTreeTool = 
+listFileTreeTool =
     pathParam = {
         name: "path",
         type: "string",
-        description: 
-            """
-            The relative unix style path to a directory. `..` is not allowed. Must begin with `.`
-            """,
+        description: "The relative unix style path to a directory. `..` is not allowed. Must begin with `.`",
         required: Bool.true,
     }
     buildTool "listFileTree" "List the contents of a directory and all subdirectories" [pathParam]
@@ -94,7 +92,7 @@ fileTreeHelper = \paths, accumulation, depth ->
     buildStr = \previous, current, subcontents -> "$(appendNewline previous)$(current)$(subcontents)"
 
     when paths is
-        [] -> 
+        [] ->
             Task.ok accumulation
 
         [path, .. as pathsTail] ->
@@ -121,10 +119,7 @@ readFileContentsTool =
     pathParam = {
         name: "path",
         type: "string",
-        description: 
-            """
-            The relative unix style path to a directory. `..` is not allowed. Must begin with `.`
-            """,
+        description: "The relative unix style path to a directory. `..` is not allowed. Must begin with `.`",
         required: Bool.true,
     }
     buildTool "readFileContents" "Read the contents of a file. Must be a plain text file (any extension)." [pathParam]
@@ -145,7 +140,73 @@ readFileContentsHandler = \args ->
                 Task.ok "Invalid path: must be a relative path"
             else
                 path
+                    |> pathFromStr
                     |> readFile
                     |> Task.result!
                     |> Result.withDefault "Failed to read file"
                     |> Task.ok
+
+## Expose name, handler and tool for writeFileContents
+writeFileContents = {
+    name: writeFileContentsTool.function.name,
+    handler: writeFileContentsHandler,
+    tool: writeFileContentsTool,
+}
+
+## Tool definition for the writeFileContents function
+writeFileContentsTool : Tool
+writeFileContentsTool =
+    pathParam = {
+        name: "path",
+        type: "string",
+        description: "The relative unix style path to a file. `..` is not allowed. Must begin with `.`",
+        required: Bool.true,
+    }
+    contentParam = {
+        name: "content",
+        type: "string",
+        description: "The full text content to write to the file. This must be the full content of the file.",
+        required: Bool.true,
+    }
+    buildTool
+        "writeFileContents"
+        """
+        Write the text content to a file. Any existing file at the specified path will be overwritten.
+        If the file does not exist, it will be created, but parent directories must exist.
+        """
+        [pathParam, contentParam]
+
+## Handler for the writeFileContents tool
+writeFileContentsHandler : Str -> Task Str _
+writeFileContentsHandler = \args ->
+    decoded : Decode.DecodeResult { path : Str, content : Str }
+    decoded = args |> Str.toUtf8 |> Decode.fromBytesPartial Json.utf8
+    when decoded.result is
+        Err _ ->
+            Task.ok "Failed to decode args"
+
+        Ok { path, content } ->
+            if path |> Str.contains ".." then
+                Task.ok "Invalid path: `..` is not allowed"
+            else if path |> Str.startsWith "/" then
+                Task.ok "Invalid path: must be a relative path"
+            else
+                path
+                    |> pathFromStr
+                    |> writeUtf8 content
+                    |> Task.result!
+                    |> Result.try \_ -> Ok "File successfully updated."
+                    |> Result.onErr handleWriteErr
+                    |> Result.withDefault "Error writing to file"
+                    |> Task.ok
+
+handleWriteErr = \err ->
+    when err is
+        FileWriteErr _ NotFound -> Ok "File not found"
+        FileWriteErr _ AlreadyExists -> Ok "File already exists"
+        FileWriteErr _ Interrupted -> Ok "Write interrupted"
+        FileWriteErr _ OutOfMemory -> Ok "Out of memory"
+        FileWriteErr _ PermissionDenied -> Ok "Permission denied"
+        FileWriteErr _ TimedOut -> Ok "Timed out"
+        FileWriteErr _ WriteZero -> Ok "Write zero"
+        FileWriteErr _ (Other str) -> Ok str
