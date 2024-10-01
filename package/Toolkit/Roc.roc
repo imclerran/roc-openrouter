@@ -1,4 +1,4 @@
-module { cmdNew, cmdArg, cmdOutput } -> [roc, rocCheck, rocStart]
+module { cmdNew, cmdArg, cmdOutput } -> [roc, rocCheck, rocTest, rocStart]
 
 import json.Json
 import InternalTools exposing [Tool, buildTool]
@@ -83,6 +83,44 @@ rocCheckHandler = \args ->
             else
                 cmdNew "roc" 
                     |> cmdArg "check"
+                    |> cmdArg rocFile
+                    |> cmdOutput
+                    |> Task.result!
+                    |> cmdOutputResultToStr
+                    |> Task.ok
+
+rocTest = {
+    name: rocTestTool.function.name,
+    handler: rocTestHandler,
+    tool: rocTestTool,
+}
+
+rocTestTool : Tool
+rocTestTool = 
+    rocFileParam = {
+        name: "rocFile",
+        type: "string",
+        description: "The path to the .roc file to be tested. IE: `./path/to/file.roc`",
+        required: Bool.true,
+    }
+    buildTool "rocTest" "Test the expect statements in a specified roc file." [rocFileParam]
+
+rocTestHandler : Str -> Task Str _
+rocTestHandler = \args ->
+    decoded : Decode.DecodeResult { rocFile : Str }
+    decoded = args |> Str.toUtf8 |> Decode.fromBytesPartial Json.utf8
+    when decoded.result is
+        Err _ ->
+            Task.ok "Failed to decode args"
+
+        Ok { rocFile } ->
+            if rocFile |> Str.contains ".." then
+                Task.ok "Invalid path: `..` is not allowed"
+            else if rocFile |> Str.startsWith "/" then
+                Task.ok "Invalid path: must be a relative path"
+            else
+                cmdNew "roc" 
+                    |> cmdArg "test"
                     |> cmdArg rocFile
                     |> cmdOutput
                     |> Task.result!
