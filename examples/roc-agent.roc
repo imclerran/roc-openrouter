@@ -35,21 +35,10 @@ main =
     Task.loop! { previousMessages: initMessages } \{ previousMessages } -> ## Task.loop function must be inline due to roc issue #7116
         Stdout.write! "You: "
         messages = Chat.appendUserMessage previousMessages Stdin.line! {}
-        request = Chat.buildHttpRequest client messages {} |> logRequest!
-        response = Http.send (request) |> Task.result!
+        response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
         updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
         printLastMessage! updatedMessages
         Task.ok (Step { previousMessages: updatedMessages })
-
-## Log the request to a file
-logRequest = \req ->
-    path = "req.json" |> Path.fromStr
-    prev = path 
-        |> Path.readBytes 
-        |> Task.map \bytes -> List.join [bytes, [',', '\n']] 
-        |> Task.onErr! \_ -> Task.ok []
-    path |> Path.writeBytes! (List.join [prev, req.body])
-    Task.ok req
 
 ## Initialize the workspace directory
 initWorkspace : Task {} _
@@ -79,6 +68,7 @@ initMessages =
     |> Chat.appendUserMessage # claude does not put high priority on system messages, so this is sent as a user message.
         """
         CRITICAL: Do not ever change the app header, including platform or package urls, which are set by the rocStart tool.
+        You should make sure to read the file contents before changing them, so you can maintain the current app headers.
         The app header is at the top of the file and follows the syntax `app [...] { ... }`. Nothing in this block should ever be changed.
         You should assume that the app header portion is always correct. This is absolutely critical or the program will not work.
         This also includes any files you are asked to edit, which were not initialized by the rocStart tool.
@@ -115,6 +105,7 @@ updateMessagesFromResponse = \responseRes, messages ->
             Chat.appendSystemMessage messages (Http.errorToString err) {}
 
 ## List of tool definitions to be given to the AI model
+tools: List Tools.Tool
 tools = [
     roc.tool,
     rocCheck.tool,
