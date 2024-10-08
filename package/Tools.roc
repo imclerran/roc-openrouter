@@ -1,6 +1,6 @@
 module { sendHttpReq } -> [Tool, ToolCall, buildTool, handleToolCalls, dispatchToolCalls] 
 
-import json.Option exposing [Option]
+# import json.Option exposing [Option]
 import InternalTools
 import Chat
 import Client exposing [Client]
@@ -12,9 +12,9 @@ ToolCall : InternalTools.ToolCall
 Message : {
     role : Str,
     content : Str,
-    toolCalls : Option (List ToolCall),
-    toolCallId : Option Str,
-    name : Option Str,
+    toolCalls : List ToolCall,
+    name : Str,
+    toolCallId : Str,
     cached: Bool,
 }
 
@@ -37,16 +37,15 @@ HttpResponse : {
 handleToolCalls : List Message, Client, Dict Str (Str -> Task Str _) -> Task (List Message) _
 handleToolCalls = \messages, client, toolHandlerMap ->
     when List.last messages is
-        Ok { role, toolCalls: tcs } if role == "assistant" ->
-            when Option.get tcs is
-                Some toolCalls ->
-                    toolMessages = dispatchToolCalls! toolCalls toolHandlerMap
-                    messagesWithTools = List.join [messages, toolMessages]
-                    response = sendHttpReq (Chat.buildHttpRequest client messagesWithTools {}) |> Task.result!
-                    messagesWithResponse = updateMessagesFromResponse messagesWithTools response
-                    handleToolCalls messagesWithResponse client toolHandlerMap
-
-                None -> Task.ok messages
+        Ok { role, toolCalls } if role == "assistant" ->
+            if List.isEmpty toolCalls then
+                Task.ok messages
+            else
+                toolMessages = dispatchToolCalls! toolCalls toolHandlerMap
+                messagesWithTools = List.join [messages, toolMessages]
+                response = sendHttpReq (Chat.buildHttpRequest client messagesWithTools {}) |> Task.result!
+                messagesWithResponse = updateMessagesFromResponse messagesWithTools response
+                handleToolCalls messagesWithResponse client toolHandlerMap
 
         _ -> Task.ok messages
 
@@ -76,9 +75,9 @@ callTool = \toolCall, handler ->
     Task.map (handler toolCall.function.arguments) \text -> {
         role: "tool",
         content: text,
-        toolCalls: Option.none {},
-        toolCallId: Option.some toolCall.id,
-        name: Option.some toolCall.function.name,
+        toolCalls: [],
+        toolCallId: toolCall.id,
+        name: toolCall.function.name,
         cached: Bool.false,
     }
 

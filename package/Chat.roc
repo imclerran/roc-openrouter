@@ -18,8 +18,17 @@ import json.Json
 import json.Option exposing [Option]
 
 import Client
-import Shared exposing [RequestObject, ApiError, dropLeadingGarbage, optionToStr]
 import InternalTools exposing [ToolCall, ToolChoice]
+import Shared exposing [
+    RequestObject, 
+    ApiError, 
+    dropLeadingGarbage, 
+    optionToStr,
+    optionToList,
+    strToOption,
+    listToOption,
+]
+
 
 Client : Client.Client
 
@@ -27,9 +36,9 @@ Client : Client.Client
 Message : {
     role : Str,
     content : Str,
-    toolCalls : Option (List ToolCall),
-    name : Option Str,
-    toolCallId : Option Str,
+    toolCalls : List ToolCall,
+    name : Str,
+    toolCallId : Str,
     cached: Bool,
 }
 
@@ -198,13 +207,10 @@ decodeResponse = \bodyBytes ->
 convertInternalMessage : DecodeMessage -> Message
 convertInternalMessage = \internalMessage -> {
     role: internalMessage.role,
-    content:
-    when Option.get internalMessage.content is
-        Some text -> text
-        None -> "",
-    toolCalls: internalMessage.toolCalls,
-    toolCallId: internalMessage.toolCallId,
-    name: internalMessage.name,
+    content: optionToStr internalMessage.content,
+    toolCalls: optionToList internalMessage.toolCalls,
+    toolCallId: optionToStr internalMessage.toolCallId,
+    name: optionToStr internalMessage.name,
     cached: Bool.false,
 }
 
@@ -263,7 +269,7 @@ injectMessages = \bodyBytes, messages ->
     else
         { before, others } = List.split bodyBytes injectAt
         messageBytes = messages |> List.map \message ->
-            if message.cached && message.toolCallId == Option.none {} then
+            if message.cached && message.toolCallId == "" then
                 messageToCacheMessage message
                 |> Encode.toBytes (Json.utf8With { fieldNameMapping: SnakeCase, emptyEncodeAsNull: Json.encodeAsNullOption { record: Bool.false } })
                 |> List.append ','
@@ -280,9 +286,9 @@ messageToCacheMessage : Message -> EncodeCacheMessage
 messageToCacheMessage = \message -> {
     role: message.role,
     content: [buildMessageContent message.content message.cached],
-    toolCalls: message.toolCalls,
-    toolCallId: message.toolCallId,
-    name: message.name,
+    toolCalls: listToOption message.toolCalls,
+    toolCallId: strToOption message.toolCallId,
+    name: strToOption message.name,
 }
 
 ## Convert a Message to an EncodeBasicMessage
@@ -290,22 +296,22 @@ messageToBasicMessage : Message -> EncodeBasicMessage
 messageToBasicMessage = \message -> {
     role: message.role,
     content: message.content,
-    toolCalls: message.toolCalls,
-    toolCallId: message.toolCallId,
-    name: message.name,
+    toolCalls: listToOption message.toolCalls,
+    toolCallId: strToOption message.toolCallId,
+    name: strToOption message.name,
 }
 
 ## Append a system message to the list of messages
 appendSystemMessage : List Message, Str, { cached ? Bool } -> List Message
 appendSystemMessage = \messages, text, { cached ? Bool.false } ->
-    List.append messages { role: "system", content: text, toolCalls: Option.none {}, toolCallId: Option.none {}, name: Option.none {}, cached }
+    List.append messages { role: "system", content: text, toolCalls: [], toolCallId: "", name: "", cached }
 
 ## Append a user message to the list of messages
 appendUserMessage : List Message, Str, { cached ? Bool } -> List Message
 appendUserMessage = \messages, text, { cached ? Bool.false } ->
-    List.append messages { role: "user", content: text, toolCalls: Option.none {}, toolCallId: Option.none {}, name: Option.none {}, cached }
+    List.append messages { role: "user", content: text, toolCalls: [], toolCallId: "", name: "", cached }
 
 ## Append an assistant message to the list of messages
 appendAssistantMessage : List Message, Str, { cached ? Bool } -> List Message
 appendAssistantMessage = \messages, text, { cached ? Bool.false } ->
-    List.append messages { role: "assistant", content: text, toolCalls: Option.none {}, toolCallId: Option.none {}, name: Option.none {}, cached }
+    List.append messages { role: "assistant", content: text, toolCalls: [], toolCallId: "", name: "", cached }
