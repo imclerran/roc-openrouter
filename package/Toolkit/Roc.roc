@@ -151,7 +151,9 @@ rocStartTool =
         "rocStart" 
         """
         Start a new Roc application with the specified name and platform. 
-        You should always use this tool when creating a new roc program.
+        You should always use this tool when creating a new roc program,
+        and make sure to read read the generated output file before changing
+        it, so that the correct package and platform urls can be maintained.
         """
         [appNameParam, platformParam]
 
