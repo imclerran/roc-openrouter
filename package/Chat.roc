@@ -208,6 +208,7 @@ convertInternalMessage = \internalMessage -> {
     cached: Bool.false,
 }
 
+## Build a CacheContent object for a message
 buildMessageContent : Str, Bool -> CacheContent
 buildMessageContent = \text, cached -> { 
     type: "text", 
@@ -247,6 +248,8 @@ encodeRequestBody = \body ->
             }
         )
 
+## Inject the messages list into the request body, by encoding 
+## the message to the correct format based on the cached flag.
 injectMessages : List U8, List Message -> List U8
 injectMessages = \bodyBytes, messages ->
     injectAt = List.walkWithIndexUntil bodyBytes 0 \_, _, i ->
@@ -255,7 +258,9 @@ injectMessages = \bodyBytes, messages ->
             ['m', 'e', 's', 's', 'a', 'g', 'e', 's', '"', ':', ' ', '[', ..] -> Break (i + 12)
             _ -> Continue 0
 
-    if injectAt > 0 then
+    if injectAt == 0 then
+        bodyBytes
+    else
         { before, others } = List.split bodyBytes injectAt
         messageBytes = messages |> List.map \message ->
             if message.cached && message.toolCallId == Option.none {} then
@@ -269,9 +274,8 @@ injectMessages = \bodyBytes, messages ->
             |> List.join
             |> List.dropLast 1
         List.join [before, messageBytes, others]
-    else
-        bodyBytes
-                
+
+## Convert a Message to an EncodeCacheMessage
 messageToCacheMessage : Message -> EncodeCacheMessage
 messageToCacheMessage = \message -> {
     role: message.role,
@@ -281,6 +285,7 @@ messageToCacheMessage = \message -> {
     name: message.name,
 }
 
+## Convert a Message to an EncodeBasicMessage
 messageToBasicMessage : Message -> EncodeBasicMessage
 messageToBasicMessage = \message -> {
     role: message.role,
