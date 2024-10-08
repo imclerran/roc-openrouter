@@ -147,7 +147,13 @@ rocStartTool =
         description: "The platform to use in the new roc application. May be one of: `basic-cli`, or `basic-webserer`",
         required: Bool.true,
     }
-    buildTool "rocStart" "Start a new Roc application with the specified name and platform." [appNameParam, platformParam]
+    buildTool 
+        "rocStart" 
+        """
+        Start a new Roc application with the specified name and platform. 
+        You should always use this tool when creating a new roc program.
+        """
+        [appNameParam, platformParam]
 
 rocStartHandler : Str -> Task Str _
 rocStartHandler = \args ->
