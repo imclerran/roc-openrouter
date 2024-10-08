@@ -22,7 +22,7 @@ main =
     Stdout.line! ("Assistant: Ask me about the weather, or anything on the web!\n" |> Ansi.color { fg: Standard Cyan })
     Task.loop! { previousMessages: [] } \{ previousMessages } -> ## Task.loop function must be inline due to roc issue #7116
         Stdout.write! "You: "
-        messages = Chat.appendUserMessage previousMessages Stdin.line!
+        messages = Chat.appendUserMessage previousMessages Stdin.line! {}
         response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
         updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
         printLastMessage! updatedMessages
@@ -55,13 +55,13 @@ updateMessagesFromResponse = \responseRes, messages ->
         Ok response ->
             when Chat.decodeTopMessageChoice response.body is
                 Ok message -> List.append messages message
-                Err (ApiError err) -> Chat.appendSystemMessage messages "API error: $(err.message)"
-                Err NoChoices -> Chat.appendSystemMessage messages "No choices in API response"
-                Err (BadJson str) -> Chat.appendSystemMessage messages "Could not decode JSON response:\n$(str)"
-                Err DecodingError -> Chat.appendSystemMessage messages "Error decoding API response"
+                Err (ApiError err) -> Chat.appendSystemMessage messages "API error: $(err.message)" {}
+                Err NoChoices -> Chat.appendSystemMessage messages "No choices in API response" {}
+                Err (BadJson str) -> Chat.appendSystemMessage messages "Could not decode JSON response:\n$(str)" {}
+                Err DecodingError -> Chat.appendSystemMessage messages "Error decoding API response" {}
 
         Err (HttpErr err) ->
-            Chat.appendSystemMessage messages (Http.errorToString err)
+            Chat.appendSystemMessage messages (Http.errorToString err) {}
 
 ## Map of tool names to tool handlers
 toolHandlerMap : Dict Str (Str -> Task Str _)

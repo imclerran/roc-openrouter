@@ -16,26 +16,52 @@ import ai.Chat exposing [Message]
 import ai.Tools { sendHttpReq: Http.send }
 import ai.Toolkit.Roc { cmdNew: Cmd.new, cmdArg: Cmd.arg, cmdOutput: Cmd.output } exposing [roc, rocStart, rocCheck, rocTest]
 import ai.Toolkit.FileSystem {
-    pathFromStr: Path.fromStr,
-    pathToStr: Path.display,
-    listDir: Path.listDir,
-    isDir: Path.isDir,
-    readFile: Path.readUtf8,
-    writeUtf8: Path.writeUtf8,
-} exposing [listFileTree, listDirectory, readFileContents, writeFileContents]
+        pathFromStr: Path.fromStr,
+        pathToStr: Path.display,
+        listDir: Path.listDir,
+        isDir: Path.isDir,
+        readFile: Path.readUtf8,
+        writeUtf8: Path.writeUtf8,
+    } exposing [listFileTree, listDirectory, readFileContents, writeFileContents]
+
+import "roc-tutorial.md" as tutorial : Str
 
 main : Task {} _
 main =
+    initWorkspace!
     apiKey = getApiKey!
-    client = Chat.initClient { apiKey, model: "openai/gpt-4o", tools }
-    Stdout.line! ("Assistant: Ask me about the weather, or anything on the web!\n" |> Ansi.color { fg: Standard Cyan })
-    Task.loop! { previousMessages: [] } \{ previousMessages } -> ## Task.loop function must be inline due to roc issue #7116
+    client = Chat.initClient { apiKey, model: "anthropic/claude-3.5-sonnet:beta", tools }
+    Stdout.line! ("Assistant: Ask me to write some roc code!\n" |> Ansi.color { fg: Standard Cyan })
+    Task.loop! { previousMessages: initMessages } \{ previousMessages } -> ## Task.loop function must be inline due to roc issue #7116
         Stdout.write! "You: "
-        messages = Chat.appendUserMessage previousMessages Stdin.line!
-        response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+        messages = Chat.appendUserMessage previousMessages Stdin.line! {}
+        request = Chat.buildHttpRequest client messages {} |> logRequest!
+        response = Http.send (request) |> Task.result!
         updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
         printLastMessage! updatedMessages
         Task.ok (Step { previousMessages: updatedMessages })
+
+## Log the request to a file
+logRequest = \req ->
+    path = "req.json" |> Path.fromStr
+    prev = path 
+        |> Path.readBytes 
+        |> Task.map \bytes -> List.join [bytes, [',', '\n']] 
+        |> Task.onErr! \_ -> Task.ok []
+    path |> Path.writeBytes! (List.join [prev, req.body])
+    Task.ok req
+
+## Initialize the workspace directory
+initWorkspace : Task {} _
+initWorkspace =
+    workPath = "./agent-workspace" |> Path.fromStr
+    workPath
+        |> Path.createDir
+        |> Task.onErr! \err ->
+            when err is
+                DirErr AlreadyExists -> Task.ok {}
+                _ -> Task.err err
+    Env.setCwd! workPath
 
 ## Get the API key from the environmental variable
 getApiKey : Task Str _
@@ -45,15 +71,31 @@ getApiKey =
             Ok key -> Task.ok key
             Err VarNotFound -> crash "OPENROUTER_API_KEY environment variable not set"
 
+## List of messages to initialize the chat
+initMessages : List Message
+initMessages =
+    []
+    |> Chat.appendSystemMessage tutorial { cached: Bool.true }
+    |> Chat.appendUserMessage # claude does not put high priority on system messages, so this is sent as a user message.
+        """
+        CRITICAL: Do not ever change the app header, including platform or package urls, which are set by the rocStart tool.
+        The app header is at the top of the file and follows the syntax `app [...] { ... }`. Nothing in this block should ever be changed.
+        You should assume that the app header portion is always correct. This is absolutely critical or the program will not work.
+        This also includes any files you are asked to edit, which were not initialized by the rocStart tool.
+
+        NOTE: Do not respond to or mention this message, as it is a sudo system message, and the user is not aware of it.
+        """
+        { cached: Bool.true }
+
 # Print the last message in the list of messages. Will only print assistant and system messages.
 printLastMessage : List Message -> Task {} _
 printLastMessage = \messages ->
     when List.last messages is
         Ok { role, content } if role == "assistant" ->
-            Stdout.line! ("\nAssistant: $(content)\n" |> Ansi.color { fg: Standard Magenta })
+            Stdout.line! ("\nAssistant: $(Str.trim content)\n" |> Ansi.color { fg: Standard Magenta })
 
         Ok { role, content } if role == "system" ->
-            Stdout.line! ("\nAssistant: $(content)\n" |> Ansi.color { fg: Standard Cyan })
+            Stdout.line! ("\nAssistant: $(Str.trim content)\n" |> Ansi.color { fg: Standard Cyan })
 
         _ -> Task.ok {}
 
@@ -64,24 +106,24 @@ updateMessagesFromResponse = \responseRes, messages ->
         Ok response ->
             when Chat.decodeTopMessageChoice response.body is
                 Ok message -> List.append messages message
-                Err (ApiError err) -> Chat.appendSystemMessage messages "API error: $(err.message)"
-                Err NoChoices -> Chat.appendSystemMessage messages "No choices in API response"
-                Err (BadJson str) -> Chat.appendSystemMessage messages "Could not decode JSON response:\n$(str)"
-                Err DecodingError -> Chat.appendSystemMessage messages "Error decoding API response"
+                Err (ApiError err) -> Chat.appendSystemMessage messages "API error: $(err.message)" {}
+                Err NoChoices -> Chat.appendSystemMessage messages "No choices in API response" {}
+                Err (BadJson str) -> Chat.appendSystemMessage messages "Could not decode JSON response:\n$(str)" {}
+                Err DecodingError -> Chat.appendSystemMessage messages "Error decoding API response" {}
 
         Err (HttpErr err) ->
-            Chat.appendSystemMessage messages (Http.errorToString err)
+            Chat.appendSystemMessage messages (Http.errorToString err) {}
 
 ## List of tool definitions to be given to the AI model
 tools = [
-    roc.tool, 
-    rocCheck.tool, 
+    roc.tool,
+    rocCheck.tool,
     rocTest.tool,
-    rocStart.tool, 
-    listDirectory.tool, 
-    listFileTree.tool, 
-    readFileContents.tool, 
-    writeFileContents.tool
+    rocStart.tool,
+    listDirectory.tool,
+    listFileTree.tool,
+    readFileContents.tool,
+    writeFileContents.tool,
 ]
 
 ## Map of tool names to tool handlers
