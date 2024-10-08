@@ -1,6 +1,6 @@
 module { sendHttpReq } -> [Tool, ToolCall, buildTool, handleToolCalls, dispatchToolCalls] 
 
-import json.Option exposing [Option]
+# import json.Option exposing [Option]
 import InternalTools
 import Chat
 import Client exposing [Client]
@@ -12,9 +12,10 @@ ToolCall : InternalTools.ToolCall
 Message : {
     role : Str,
     content : Str,
-    toolCalls : Option (List ToolCall),
-    toolCallId : Option Str,
-    name : Option Str,
+    toolCalls : List ToolCall,
+    name : Str,
+    toolCallId : Str,
+    cached: Bool,
 }
 
 ## Represents an HTTP response.
@@ -36,16 +37,15 @@ HttpResponse : {
 handleToolCalls : List Message, Client, Dict Str (Str -> Task Str _) -> Task (List Message) _
 handleToolCalls = \messages, client, toolHandlerMap ->
     when List.last messages is
-        Ok { role, toolCalls: tcs } if role == "assistant" ->
-            when Option.get tcs is
-                Some toolCalls ->
-                    toolMessages = dispatchToolCalls! toolCalls toolHandlerMap
-                    messagesWithTools = List.join [messages, toolMessages]
-                    response = sendHttpReq (Chat.buildHttpRequest client messagesWithTools {}) |> Task.result!
-                    messagesWithResponse = getMessagesFromResponse messagesWithTools response
-                    handleToolCalls messagesWithResponse client toolHandlerMap
-
-                None -> Task.ok messages
+        Ok { role, toolCalls } if role == "assistant" ->
+            if List.isEmpty toolCalls then
+                Task.ok messages
+            else
+                toolMessages = dispatchToolCalls! toolCalls toolHandlerMap
+                messagesWithTools = List.join [messages, toolMessages]
+                response = sendHttpReq (Chat.buildHttpRequest client messagesWithTools {}) |> Task.result!
+                messagesWithResponse = updateMessagesFromResponse messagesWithTools response
+                handleToolCalls messagesWithResponse client toolHandlerMap
 
         _ -> Task.ok messages
 
@@ -72,17 +72,18 @@ dispatchToolCalls = \toolCallList, toolHandlerMap ->
 ## Call the given tool function with the given arguments and return the tool message.
 callTool : ToolCall, (Str -> Task Str err) -> Task Message err
 callTool = \toolCall, handler ->
-    Task.map (handler toolCall.function.arguments) \content -> {
+    Task.map (handler toolCall.function.arguments) \text -> {
         role: "tool",
-        content,
-        toolCalls: Option.none {},
-        toolCallId: Option.some toolCall.id,
-        name: Option.some toolCall.function.name,
+        content: text,
+        toolCalls: [],
+        toolCallId: toolCall.id,
+        name: toolCall.function.name,
+        cached: Bool.false,
     }
 
 ## Get the messages from the response and return the updated list of messages.
-getMessagesFromResponse : List Message, Result HttpResponse _ -> List Message
-getMessagesFromResponse = \messages, responseRes ->
+updateMessagesFromResponse : List Message, Result HttpResponse _ -> List Message
+updateMessagesFromResponse = \messages, responseRes ->
     when responseRes is
         Ok response ->
             when Chat.decodeTopMessageChoice response.body is
@@ -90,6 +91,20 @@ getMessagesFromResponse = \messages, responseRes ->
                 _ -> messages
 
         Err (HttpErr _) -> messages
+
+## decode the response from the OpenRouter API and append the first message to the list of messages
+# updateMessagesFromResponse : List Message, Result HttpResponse _ -> List Message
+# updateMessagesFromResponse = \messages, responseRes->
+#     when responseRes is
+#         Ok response ->
+#             when Chat.decodeTopMessageChoice response.body is
+#                 Ok message -> List.append messages message
+#                 Err (ApiError err) -> Chat.appendSystemMessage messages "API error: $(err.message)" {}
+#                 Err NoChoices -> Chat.appendSystemMessage messages "No choices in API response" {}
+#                 Err (BadJson str) -> Chat.appendSystemMessage messages "Could not decode JSON response:\n$(str)" {}
+#                 Err DecodingError -> Chat.appendSystemMessage messages "Error decoding API response" {}
+
+#         Err (HttpErr _) -> messages
 
 ## Build a tool object with the given name, description, and parameters.
 buildTool = InternalTools.buildTool

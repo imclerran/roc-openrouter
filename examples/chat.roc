@@ -29,7 +29,7 @@ main =
 loop = \{ client, previousMessages } ->
     Stdout.write! "You: "
     query = Stdin.line!
-    messages = Chat.appendUserMessage previousMessages query
+    messages = Chat.appendUserMessage previousMessages query {}
     when query |> strToLower is
         "goodbye" | "quit" | "exit" -> Task.ok (Done {})
         "change model" ->
@@ -74,13 +74,13 @@ getMessagesFromResponse = \messages, responseRes ->
         Ok response ->
             when Chat.decodeTopMessageChoice response.body is
                 Ok message -> List.append messages message
-                Err (ApiError err) -> Chat.appendSystemMessage messages "API error: $(err.message)"
-                Err NoChoices -> Chat.appendSystemMessage messages "No choices in API response"
-                Err (BadJson str) -> Chat.appendSystemMessage messages "Could not decode JSON response:\n$(str)"
-                Err DecodingError -> Chat.appendSystemMessage messages "Error decoding API response"
+                Err (ApiError err) -> Chat.appendSystemMessage messages "API error: $(err.message)" {}
+                Err NoChoices -> Chat.appendSystemMessage messages "No choices in API response" {}
+                Err (BadJson str) -> Chat.appendSystemMessage messages "Could not decode JSON response:\n$(str)" {}
+                Err DecodingError -> Chat.appendSystemMessage messages "Error decoding API response" {}
 
         Err (HttpErr err) ->
-            Chat.appendSystemMessage messages (Http.errorToString err)
+            Chat.appendSystemMessage messages (Http.errorToString err) {}
 
 ## Prompt the user to choose a model and return the selected model
 getModelChoice : Task Str _
@@ -108,6 +108,7 @@ initializeMessages =
         You are a helpful assistant, who answers questions in a concise and friendly manner. 
         If you do not have knowledge about the on the users inquires about, you should politely tell them you cannot help.
         """
+        {}
 
 ## The default model selection
 defaultModel = "meta-llama/llama-3.1-8b-instruct:free"

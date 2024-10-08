@@ -56,8 +56,8 @@ injectToolChoice = \requestBody, toolChoice ->
     { before, others } = List.split requestBody ((List.len requestBody) - 1)
     toolChoiceJson =
         when toolChoice is
-            None -> "none" |> Str.toUtf8
-            Auto -> "auto" |> Str.toUtf8
+            None -> "\"none\"" |> Str.toUtf8
+            Auto -> "\"auto\"" |> Str.toUtf8
             ToolName toolName ->
                 """
                 {"type": "function", "function": { "name": "$(toolName)"}}
@@ -93,6 +93,7 @@ propertiesToJson = \properties ->
     |> Str.joinWith ", "
     |> \dictContent -> "{$(dictContent)}"
 
+## Build a tool object.
 buildTool : Str, Str, List { name : Str, type : Str, description : Str, required : Bool } -> Tool
 buildTool = \name, description, parameters ->
     properties =

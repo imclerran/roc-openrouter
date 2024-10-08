@@ -9,6 +9,8 @@ module [
     optionToStr,
     optionToList,
     urlEncode,
+    strToOption,
+    listToOption,
 ]
 
 import json.Json
@@ -59,18 +61,35 @@ decodeErrorResponse = \bodyBytes ->
     decoded = Decode.fromBytesPartial cleanedBody decoder
     decoded.result
 
+## Convert an Option to a string
 optionToStr : Option Str -> Str
 optionToStr = \opt ->
     when Option.get opt is
         Some str -> str
         None -> ""
 
+## Convert a string to an Option
+strToOption : Str -> Option Str
+strToOption = \str ->
+    when str is
+        "" -> Option.none {}
+        _ -> Option.some str
+
+## Convert an Option to a List
 optionToList : Option (List a) -> List a
 optionToList = \opt ->
     when Option.get opt is
         Some list -> list
         None -> []
 
+## Convert a List to an Option
+listToOption : List a -> Option (List a)
+listToOption = \list ->
+    when list is
+        [] -> Option.none {}
+        _ -> Option.some list
+
+## URL-encode a string
 urlEncode : Str -> Str
 urlEncode = \str ->
     str
@@ -81,6 +100,7 @@ urlEncode = \str ->
             ([char] |> Str.fromUtf8 |> Result.withDefault "")
     |> Str.joinWith ""
 
+## Dictionary of characters to URL-encoded strings
 urlEncodeDict : Dict U8 Str
 urlEncodeDict =
     Dict.empty {}
