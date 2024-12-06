@@ -267,7 +267,7 @@ injectMessages = \bodyBytes, messages ->
     if injectAt == 0 then
         bodyBytes
     else
-        { before, others } = List.split bodyBytes injectAt
+        { before, others } = List.splitAt bodyBytes injectAt
         messageBytes = messages |> List.map \message ->
             if message.cached && message.toolCallId == "" then
                 messageToCacheMessage message

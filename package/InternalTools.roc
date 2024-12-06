@@ -46,14 +46,14 @@ ToolChoice : [None, Auto, ToolName Str]
 ## Inject the tools list into the request body. This is necessary because Encode does not support Dict types.
 injectTools : List U8, List Tool -> List U8
 injectTools = \requestBody, tools ->
-    { before, others } = List.split requestBody ((List.len requestBody) - 1)
+    { before, others } = List.splitAt requestBody ((List.len requestBody) - 1)
     toolsJson = encodeTools tools
     [before, (", \"tools\": " |> Str.toUtf8), toolsJson, others] |> List.join
 
 ## Inject the tool choice into the request body. This is necessary because Encode does not support Dict types.
 injectToolChoice : List U8, ToolChoice -> List U8
 injectToolChoice = \requestBody, toolChoice ->
-    { before, others } = List.split requestBody ((List.len requestBody) - 1)
+    { before, others } = List.splitAt requestBody ((List.len requestBody) - 1)
     toolChoiceJson =
         when toolChoice is
             None -> "\"none\"" |> Str.toUtf8
