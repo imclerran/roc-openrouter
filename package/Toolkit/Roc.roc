@@ -213,10 +213,10 @@ stripAnsiControl : List U8 -> List U8
 stripAnsiControl = \bytes ->
     when List.findFirstIndex bytes (\b -> b == 27) is
         Ok escapeIndex -> 
-            { before: lhs, others: remainder } = List.split bytes escapeIndex
+            { before: lhs, others: remainder } = List.splitAt bytes escapeIndex
             when List.findFirstIndex remainder (\b -> (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')) is
                 Ok controlIndex -> 
-                    { before: _, others: rhs } = List.split remainder (controlIndex + 1)
+                    { before: _, others: rhs } = List.splitAt remainder (controlIndex + 1)
                     List.concat lhs (stripAnsiControl rhs)
                 Err _ -> bytes
         Err _ -> bytes
