@@ -36,6 +36,7 @@ Client : Client.Client
 ## ```
 ## client = Chat.initClient { apiKey: "your_openrouter_api_key" }
 ## ```
+## Same as `Client.init`.
 initClient = Client.init
 
 ## The OpenAI ChatML standard message used to query the AI model.
