@@ -129,5 +129,19 @@ updateMessagesFromResponse = \messages, responseRes ->
 #         Err (HttpErr _) -> messages
 
 ## Build a tool object with the given name, description, and parameters.
+## ```
+## buildTool = \name, description, parameters -> ...
+## ```
+## Parameters:
+## - `name : Str` : The name of the tool.
+## - `description : Str` : The description of the tool.
+## - `parameters : List { ... }` : The parameters for the tool.
+##     - `name : Str` : The name of the parameter.
+##     - `type : Str` : The type of the parameter.
+##     - `description : Str` : The description of the parameter.
+##     - `required : Bool` : Whether the parameter is required.
+## 
+## Returns:
+## - `Tool` : The tool object.
 buildTool : Str, Str, List { name : Str, type : Str, description : Str, required : Bool } -> Tool
 buildTool = InternalTools.buildTool
