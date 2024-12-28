@@ -1,3 +1,4 @@
+## The prompt module contains functions and types for needed to interact with the OpenRouter API using basic prompt strings. In addition to functions for creating and handling API requests, the module includes functions for formatting prompts for models with Llama-style fine-tuning.
 module [
     PromptRequestBody,
     PromptResponseBody,
@@ -142,6 +143,7 @@ llamaSysMessageEndTag = "\n<<SYS>>\n\n"
 llamaExchangeStartTag = "<s>"
 llamaExchangeEndTag = "</s>\n"
 
+## Format the prompt and system message into a Llama-style prompt string.
 ## ```
 ## [INST]
 ## <<SYS>>
@@ -166,6 +168,7 @@ formatLLamaPrompt = \{ prompt, sysMessage ? "" } ->
             |> Str.concat prompt
             |> Str.concat llamaPromptEndTag
 
+## Format the prompt and conversation history into a Llama-style conversation history string.
 ## ```
 ## <s>1st exchange</s>
 ## <s>...</s>
@@ -183,6 +186,7 @@ formatLLamaPromptWithHistory = \prompt, conversationHistory ->
     |> Str.concat llamaExchangeStartTag
     |> Str.concat prompt
 
+## Format the most recent prompt and bot reply, and optionally the previous conversation history, into a Llama-style conversation history string.
 ## ```
 ## <s>[INST]
 ## <<SYS>>

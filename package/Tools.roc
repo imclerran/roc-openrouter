@@ -5,7 +5,34 @@ import InternalTools
 import Chat
 import Client exposing [Client]
 
+## A tool that can be called by the AI model.
+## ```
+## Tool : {
+##     type : Str,
+##     function : {
+##         name : Str,
+##         description : Str,
+##         parameters : {
+##             type : Str,
+##             properties : Dict Str FunctionParameter,
+##         },
+##         required : List Str,
+##     },
+## }
+## ```
 Tool : InternalTools.Tool
+
+## A call from the model to a tool.
+## ```
+## ToolCall : {
+##     id : Str,
+##     type : Str,
+##     function : {
+##         name : Str,
+##         arguments : Str,
+##     },
+## }
+## ```
 ToolCall : InternalTools.ToolCall
 
 ## The OpenAI ChatML standard message used to query the AI model.
@@ -27,13 +54,9 @@ HttpResponse : {
     body : List U8,
 }
 
-## Using the given toolHandlerMap, check the last message for tool calls, call all
-## the tools in the tool call list, send the results back to the model, and handle 
-## any additional tool calls that may have been generated. If or when no more tool 
-## calls are present, return the updated list of messages.
+## Using the given toolHandlerMap, check the last message for tool calls, call all the tools in the tool call list, send the results back to the model, and handle any additional tool calls that may have been generated. If or when no more tool calls are present, return the updated list of messages.
 ## 
-## The toolHandlerMap is a dictionary mapping tool function names to functions 
-## that take the arguments as a JSON string, parse the json, and return the tool's response.
+## The Dict maps function tool names strings to roc functions that take their arguments as a JSON string, parse the json, and return the tool's response.
 handleToolCalls : List Message, Client, Dict Str (Str -> Task Str _) -> Task (List Message) _
 handleToolCalls = \messages, client, toolHandlerMap ->
     when List.last messages is
@@ -51,8 +74,7 @@ handleToolCalls = \messages, client, toolHandlerMap ->
 
 ## Dispatch the tool calls to the appropriate tool handler functions and return the list of tool messages.
 ##
-## The toolHandlerMap is a dictionary mapping tool function names to functions 
-## that take the arguments as a JSON string, parse the json, and return the tool's response.
+## The Dict maps function tool names strings to roc functions that take their arguments as a JSON string, parse the json, and return the tool's response.
 dispatchToolCalls : List ToolCall, Dict Str (Str -> Task Str _) -> Task (List Message) _
 dispatchToolCalls = \toolCallList, toolHandlerMap ->
     Task.loop { toolCalls: toolCallList, toolMessages: [] } \{ toolCalls, toolMessages } ->
@@ -107,4 +129,5 @@ updateMessagesFromResponse = \messages, responseRes ->
 #         Err (HttpErr _) -> messages
 
 ## Build a tool object with the given name, description, and parameters.
+buildTool : Str, Str, List { name : Str, type : Str, description : Str, required : Bool } -> Tool
 buildTool = InternalTools.buildTool

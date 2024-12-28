@@ -1,3 +1,4 @@
+## The Chat module contains the functions and types needed to use the ChatML formatted chat completion API. It includes the Message type, ChatRequestBody and ChatResponseBody types, and various functions for creating and handling API requests.
 module [
     ChatRequestBody,
     ChatResponseBody,
@@ -29,8 +30,13 @@ import Shared exposing [
     listToOption,
 ]
 
-
 Client : Client.Client
+
+## Initialize the OpenRouter API client with the required API key. All parameters besides apiKey are completely optional, and may be set during initialization, assigned later, or left as their defaults.
+## ```
+## client = Chat.initClient { apiKey: "your_openrouter_api_key" }
+## ```
+initClient = Client.init
 
 ## The OpenAI ChatML standard message used to query the AI model.
 Message : {
@@ -135,10 +141,6 @@ DecodeChatResponseBody : {
         totalTokens : U64,
     },
 }
-
-## Initialize the OpenRouter API client with the required API key.
-## Other parameters may optionally be set during initialization, or assigned later using the Client module setters.
-initClient = Client.init
 
 ## Create a request object to be sent with basic-cli's Http.send using ChatML messages
 buildHttpRequest : Client, List Message, { toolChoice ? ToolChoice } -> RequestObject
@@ -254,8 +256,7 @@ encodeRequestBody = \body ->
             }
         )
 
-## Inject the messages list into the request body, by encoding 
-## the message to the correct format based on the cached flag.
+## Inject the messages list into the request body, by encoding the message to the correct format based on the cached flag.
 injectMessages : List U8, List Message -> List U8
 injectMessages = \bodyBytes, messages ->
     injectAt = List.walkWithIndexUntil bodyBytes 0 \_, _, i ->

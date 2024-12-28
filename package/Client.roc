@@ -1,3 +1,4 @@
+## Client for the OpenRouter.ai API. This module contains the Client object, which stores configuration for openrouter.ai API requrests, as well as the init function, and functions to set various configuration options.
 module [
     Client,
     init,
@@ -28,6 +29,29 @@ import Shared exposing [TimeoutConfig]
 import InternalTools exposing [Tool]
 
 ## The record used to store configuration for the OpenRouter API client.
+## ```
+## Client : {
+##     apiKey : Str,
+##     model : Str,
+##     url : Str,
+##     requestTimeout : TimeoutConfig,
+##     providerOrder : Option (List Str),
+##     temperature : F32,
+##     topP : F32,
+##     topK : U64,
+##     frequencyPenalty : F32,
+##     presencePenalty : F32,
+##     repetitionPenalty : F32,
+##     minP : F32,
+##     topA : F32,
+##     seed : Option U64,
+##     maxTokens : Option U64,
+##     responseFormat : { type : Str },
+##     models : Option (List Str),
+##     route : Option Str,
+##     tools: Option (List Tool),
+## }
+## ```
 Client : {
     apiKey : Str,
     model : Str,
@@ -50,11 +74,16 @@ Client : {
     tools: Option (List Tool),
 }
 
+## Default model to use for API requests. This defaults to the openrouter/auto model router.
 defaultModel = "openrouter/auto"
+
+## The default URL for the OpenRouter API. Currently the only supported URL is the openrouter.ai API url.
 defaultUrl = "https://openrouter.ai/api/v1/chat/completions"
 
-## Initialize the OpenRouter API client with the required API key.
-## Other parameters may optionally be set during initialization, or assigned later.
+## Initialize the OpenRouter API client with the required API key. All parameters besides apiKey are completely optional, and may be set during initialization, assigned later, or left as their defaults.
+## ```
+## client = Client.init { apiKey: "your_openrouter_api_key" }
+## ```
 init :
     {
         apiKey : Str,
@@ -112,8 +141,7 @@ init = \{ apiKey, model ? defaultModel, url ? defaultUrl, requestTimeout ? NoTim
 setModel : Client, Str -> Client
 setModel = \client, model -> { client & model }
 
-## Set the URL to be used for the API requests.
-## (Change with care - while the openrouter.ai API is similar to OpenAI's, there may be some unexpected differences.)
+## Set the URL to be used for the API requests. (Change with care - while the openrouter.ai API is similar to OpenAI's, there may be some unexpected differences.)
 setUrl : Client, Str -> Client
 setUrl = \client, url -> { client & url }
 
@@ -180,8 +208,7 @@ setMinP = \client, minP -> { client & minP }
 setTopA : Client, F32 -> Client
 setTopA = \client, topA -> { client & topA }
 
-## Set the seed for the API requests.
-## OpenAI models only
+## Set the seed for the API requests. (This is for OpenAI models only)
 ## Default: 0 - random seed
 setSeed : Client, U64 -> Client
 setSeed = \client, seed ->
@@ -209,8 +236,7 @@ setResponseFormat = \client, responseFormat ->
     responseFormatRecord = { type: responseFormat }
     { client & responseFormat: responseFormatRecord }
 
-## Set the models for the auto router to choose from.
-## If not set, the auto router will choose from a small selection of the top performing models.
+## Set the models for the auto router to choose from. If not set, the auto router will choose from a small selection of the top performing models.
 ## https://openrouter.ai/models/openrouter/auto
 ## Default: []
 setModels : Client, List Str -> Client
@@ -225,9 +251,7 @@ setModels = \client, models ->
         Option.some models
     { client & models: modelsOption }
 
-## Set the parameter which determines whether to use a fallback model if the primary model fails.
-## OpenRouter will use the models provided in models, or if no models are provided,
-## will try a similarly priced model to the primary.
+## Set the parameter which determines whether to use a fallback model if the primary model fails. OpenRouter will use the models provided in models, or if no models are provided, will try a similarly priced model to the primary.
 ## https://openrouter.ai/docs#model-routing
 ## Default: NoFallback
 setRoute : Client, [UseFallback, NoFallback] -> Client
@@ -238,6 +262,8 @@ setRoute = \client, route ->
             UseFallback -> Option.some "fallback"
     { client & route: routeOption }
 
+## Set the list of tools available for models to use to handle requests.
+## Default: []
 setTools : Client, List Tool -> Client
 setTools = \client, tools ->
     toolsOption =
