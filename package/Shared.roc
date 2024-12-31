@@ -4,6 +4,7 @@ module [
     ErrorResponse,
     RequestObject,
     ResponseFormat,
+    HttpResponse,
     dropLeadingGarbage,
     decodeErrorResponse,
     optionToStr,
@@ -43,6 +44,15 @@ ApiError : {
 ## Tells the LLM how to respond to the user. Should be either "text" or "json_object"
 ResponseFormat : {
     type : Str,
+}
+
+## Represents an HTTP response.
+HttpResponse : {
+    url : Str,
+    statusCode : U16,
+    statusText : Str,
+    headers : List { key : Str, value : Str },
+    body : List U8,
 }
 
 ## Drop leading garbage characters from the response body

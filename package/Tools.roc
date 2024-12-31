@@ -4,6 +4,7 @@ module { sendHttpReq } -> [Tool, ToolCall, buildTool, handleToolCalls, dispatchT
 import InternalTools
 import Chat
 import Client exposing [Client]
+import Shared exposing [HttpResponse]
 
 ## A tool that can be called by the AI model.
 ## ```
@@ -43,15 +44,6 @@ Message : {
     name : Str,
     toolCallId : Str,
     cached: Bool,
-}
-
-## Represents an HTTP response.
-HttpResponse : {
-    url : Str,
-    statusCode : U16,
-    statusText : Str,
-    headers : List { key : Str, value : Str },
-    body : List U8,
 }
 
 ## Using the given toolHandlerMap, check the last message for tool calls, call all the tools in the tool call list, send the results back to the model, and handle any additional tool calls that may have been generated. If or when no more tool calls are present, return the updated list of messages.
@@ -113,20 +105,6 @@ updateMessagesFromResponse = \messages, responseRes ->
                 _ -> messages
 
         Err (HttpErr _) -> messages
-
-## decode the response from the OpenRouter API and append the first message to the list of messages
-# updateMessagesFromResponse : List Message, Result HttpResponse _ -> List Message
-# updateMessagesFromResponse = \messages, responseRes->
-#     when responseRes is
-#         Ok response ->
-#             when Chat.decodeTopMessageChoice response.body is
-#                 Ok message -> List.append messages message
-#                 Err (ApiError err) -> Chat.appendSystemMessage messages "API error: $(err.message)" {}
-#                 Err NoChoices -> Chat.appendSystemMessage messages "No choices in API response" {}
-#                 Err (BadJson str) -> Chat.appendSystemMessage messages "Could not decode JSON response:\n$(str)" {}
-#                 Err DecodingError -> Chat.appendSystemMessage messages "Error decoding API response" {}
-
-#         Err (HttpErr _) -> messages
 
 ## Build a tool object with the given name, description, and parameters.
 ## ```
