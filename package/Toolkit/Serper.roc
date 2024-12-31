@@ -1,8 +1,27 @@
+## A prebuilt tool for interacting with the serper.dev google search API.
+##
+## Usage:
+## ```
+## # Tool list to initialize the client
+## tools = [serper]
+## # Tool handler map is passed to Tools.handleToolCalls!
+## toolHandlerMap = Dict.fromList [(serper.name, serper.handler)]
+## client = Client.init { apiKey, model: "tool-capable/model", tools }
+##
+## #...
+##
+## messages = Chat.appendUserMessage previousMessages newMessage
+## response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+## updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
+## ```
+
 module { sendHttpReq, getEnvVar } -> [serper]
 
 import InternalTools exposing [Tool, buildTool]
 
-## Expose name, handler and tool for serper
+## Expose name, handler and tool for serper.
+##
+## This tool allows the model to search google using the serper.dev API.
 serper = {
     name: tool.function.name,
     handler,

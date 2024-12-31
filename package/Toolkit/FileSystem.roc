@@ -1,3 +1,24 @@
+## A collection of prebuilt tools for interacting with the file system. For safety reasons, the tools in this module are limited to working in the current working directory and its subdirectories.
+##
+## Usage:
+## ```
+## # Tool list to initialize the client
+## tools = [listDirectory, listFileTree, readFileContents, writeFileContents ]
+## # Tool handler map is passed to Tools.handleToolCalls!
+## toolHandlerMap = Dict.fromList [
+##     (listDirectory.name, listDirectory.handler),
+##     (listFileTree.name, listFileTree.handler),
+##     (readFileContents.name, readFileContents.handler),
+##     (writeFileContents.name, writeFileContents.handler),
+## ]
+## client = Client.init { apiKey, model: "tool-capable/model", tools }
+##
+## #...
+## 
+## messages = Chat.appendUserMessage previousMessages newMessage
+## response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+## updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
+## ```
 module { pathFromStr, pathToStr, listDir, isDir, readFile, writeUtf8 } -> [
     listDirectory,
     listFileTree,
@@ -8,7 +29,8 @@ module { pathFromStr, pathToStr, listDir, isDir, readFile, writeUtf8 } -> [
 import json.Json
 import InternalTools exposing [Tool, buildTool]
 
-## Expose name, handler and tool for listDirectory
+## Expose name, handler and tool for listDirectory.
+listDirectory : { name : Str, handler : Str -> Task Str _, tool : Tool }
 listDirectory = {
     name: listDirectoryTool.function.name,
     handler: listDirectoryHandler,
@@ -48,7 +70,10 @@ listDirectoryHandler = \args ->
                     |> Str.joinWith "\n"
                     |> Task.ok
 
-## Expose name, handler and tool for listFileTree
+## Expose name, handler and tool for listFileTree.
+##
+## This tool will allow the model to list the contents of a directory, and all subdirectories.
+listFileTree : { name : Str, handler : Str -> Task Str _, tool : Tool }
 listFileTree = {
     name: listFileTreeTool.function.name,
     handler: listFileTreeHandler,
@@ -106,7 +131,10 @@ fileTreeHelper = \paths, accumulation, depth ->
                 newString = buildStr accumulation (pathToStr path) ""
                 fileTreeHelper pathsTail newString depth
 
-## Expose name, handler and tool for readFileContents
+## Expose name, handler and tool for readFileContents.
+##
+## This tool will allow the model to read the contents of a file.
+readFileContents : { name : Str, handler : Str -> Task Str _, tool : Tool }
 readFileContents = {
     name: readFileContentsTool.function.name,
     handler: readFileContentsHandler,
@@ -146,7 +174,10 @@ readFileContentsHandler = \args ->
                     |> Result.withDefault "Failed to read file"
                     |> Task.ok
 
-## Expose name, handler and tool for writeFileContents
+## Expose name, handler and tool for writeFileContents.
+##
+## This tool will allow the model to write content to a file.
+writeFileContents : { name : Str, handler : Str -> Task Str _, tool : Tool }
 writeFileContents = {
     name: writeFileContentsTool.function.name,
     handler: writeFileContentsHandler,
