@@ -1,7 +1,6 @@
 ## A prebuilt tool for interacting with the serper.dev google search API.
-##
-## Usage:
 ## ```
+## # USAGE:
 ## # Tool list to initialize the client
 ## tools = [serper]
 ## # Tool handler map is passed to Tools.handleToolCalls!

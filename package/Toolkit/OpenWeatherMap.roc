@@ -1,7 +1,6 @@
 ## A collection of prebuilt tools for interacting with the OpenWeatherMap API.
-##
-## Usage:
 ## ```
+## # USAGE:
 ## # Tool list to initialize the client
 ## tools = [geocoding, currentWeather]
 ## # Tool handler map is passed to Tools.handleToolCalls!

@@ -1,7 +1,6 @@
 ## A collection of prebuilt tools for interacting with the file system. For safety reasons, the tools in this module are limited to working in the current working directory and its subdirectories.
-##
-## Usage:
 ## ```
+## # USAGE:
 ## # Tool list to initialize the client
 ## tools = [listDirectory, listFileTree, readFileContents, writeFileContents ]
 ## # Tool handler map is passed to Tools.handleToolCalls!

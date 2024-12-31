@@ -1,7 +1,6 @@
 ## A collection of prebuilt tools for interacting with the Roc programming language CLI.
-##
-## Usage:
 ## ```
+## # USAGE:
 ## # Tool list to initialize the client
 ## tools = [roc, rocCheck, rocTest, rocStart]
 ## # Tool handler map is passed to Tools.handleToolCalls!

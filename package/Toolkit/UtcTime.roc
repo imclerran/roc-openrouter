@@ -1,7 +1,6 @@
 ## A prebuilt tool for getting the current UTC time.
-##
-## Usage:
 ## ```
+## # USAGE:
 ## # Tool list to initialize the client
 ## tools = [utcNow]
 ## # Tool handler map is passed to Tools.handleToolCalls!

@@ -1,7 +1,6 @@
 ## A prebuilt tool for interacting with the WorldTimeApi.
-##
-## Usage:
 ## ```
+## # USAGE:
 ## # Tool list to initialize the client
 ## tools = [currentTime]
 ## # Tool handler map is passed to Tools.handleToolCalls!

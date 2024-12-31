@@ -1,7 +1,6 @@
 ## A prebuilt tool for interacting with Wolfram Alpha.
-##
-## Usage:
 ## ```
+## # USAGE:
 ## # Tool list to initialize the client
 ## tools = [wolframShortAnswer]
 ## # Tool handler map is passed to Tools.handleToolCalls!

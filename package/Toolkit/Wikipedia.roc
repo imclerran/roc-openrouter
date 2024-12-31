@@ -1,7 +1,6 @@
 ## A collection of prebuilt tools for interacting with Wikipedia.
-##
-## Usage:
 ## ```
+## # USAGE:
 ## # Tool list to initialize the client
 ## tools = [wikipediaSearch, wikipediaParse]
 ## # Tool handler map is passed to Tools.handleToolCalls!
