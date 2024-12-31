@@ -114,7 +114,7 @@ dispatchToolCallsLogged = \toolCallList, toolHandlerMap, logger ->
                 toolName = toolCall.function.name
                 when toolHandlerMap |> Dict.get toolCall.function.name is
                     Ok handler ->
-                        _ = logger! "Calling tool: $(toolName)"
+                        logger! "Calling tool: $(toolName)"
                         toolMessage = callTool! toolCall handler
                         updatedToolMessages = List.append toolMessages toolMessage
                         Task.ok (Step { toolCalls: (List.dropFirst toolCalls 1), toolMessages: updatedToolMessages })
