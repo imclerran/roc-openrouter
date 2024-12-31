@@ -24,6 +24,7 @@ import InternalTools exposing [Tool]
 ## Expose name, handler and tool for geocoding.
 ##
 ## This tool will allow the model to get the correct latitude and longitude for a location, for use with the currentWeather tool.
+geocoding: { name : Str, handler : Str -> Task Str *, tool : Tool }
 geocoding = {
     name: geocodingTool.function.name,
     handler: geocodingHandler,
@@ -84,6 +85,7 @@ geocodingHandler = \args ->
 ## Expose name, handler and tool for currentWeather
 ##
 ## This tool will allow the model to get the current weather for a location.
+currentWeather: { name : Str, handler : Str -> Task Str *, tool : Tool }
 currentWeather = {
     name: currentWeatherTool.function.name,
     handler: currentWeatherHandler,

@@ -21,6 +21,7 @@ import json.Json
 ## Expose name, handler and tool for the currentTime.
 ##
 ## This tool allows the model to get the current time data for a given timezone.
+currentTime : { name : Str, handler : Str -> Task Str *, tool : Tool }
 currentTime = {
     name: tool.function.name,
     handler,

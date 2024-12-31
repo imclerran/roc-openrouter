@@ -29,7 +29,7 @@ import json.Json
 import InternalTools exposing [Tool, buildTool]
 
 ## Expose name, handler and tool for listDirectory.
-listDirectory : { name : Str, handler : Str -> Task Str _, tool : Tool }
+listDirectory : { name : Str, handler : Str -> Task Str *, tool : Tool }
 listDirectory = {
     name: listDirectoryTool.function.name,
     handler: listDirectoryHandler,
@@ -72,7 +72,7 @@ listDirectoryHandler = \args ->
 ## Expose name, handler and tool for listFileTree.
 ##
 ## This tool will allow the model to list the contents of a directory, and all subdirectories.
-listFileTree : { name : Str, handler : Str -> Task Str _, tool : Tool }
+listFileTree : { name : Str, handler : Str -> Task Str *, tool : Tool }
 listFileTree = {
     name: listFileTreeTool.function.name,
     handler: listFileTreeHandler,
@@ -133,7 +133,7 @@ fileTreeHelper = \paths, accumulation, depth ->
 ## Expose name, handler and tool for readFileContents.
 ##
 ## This tool will allow the model to read the contents of a file.
-readFileContents : { name : Str, handler : Str -> Task Str _, tool : Tool }
+readFileContents : { name : Str, handler : Str -> Task Str *, tool : Tool }
 readFileContents = {
     name: readFileContentsTool.function.name,
     handler: readFileContentsHandler,
@@ -176,7 +176,7 @@ readFileContentsHandler = \args ->
 ## Expose name, handler and tool for writeFileContents.
 ##
 ## This tool will allow the model to write content to a file.
-writeFileContents : { name : Str, handler : Str -> Task Str _, tool : Tool }
+writeFileContents : { name : Str, handler : Str -> Task Str *, tool : Tool }
 writeFileContents = {
     name: writeFileContentsTool.function.name,
     handler: writeFileContentsHandler,

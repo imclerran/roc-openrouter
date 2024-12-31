@@ -37,6 +37,7 @@ CommandErr : [
 ## Expose name, handler and tool for roc.
 ##
 ## This tool will allow the model to run `roc` for a roc file.
+roc : { name : Str, handler : Str -> Task Str *, tool : Tool }
 roc = {
     name: rocTool.function.name,
     handler: rocHandler,
@@ -77,6 +78,7 @@ rocHandler = \args ->
 ## Expose name, handler and tool for rocCheck.
 ##
 ## This tool will allow the model to run `roc check` for a Roc file.
+rocCheck : { name : Str, handler : Str -> Task Str *, tool : Tool }
 rocCheck = {
     name: rocCheckTool.function.name,
     handler: rocCheckHandler,
@@ -118,6 +120,7 @@ rocCheckHandler = \args ->
 ## Expose name, handler and tool for rocTest.
 ##
 ## This tool will allow the model to run `roc test` for a Roc file.
+rocTest : { name : Str, handler : Str -> Task Str *, tool : Tool }
 rocTest = {
     name: rocTestTool.function.name,
     handler: rocTestHandler,
@@ -159,6 +162,7 @@ rocTestHandler = \args ->
 ## Expose name, handler and tool for rocStart.
 ##
 ## This tool will allow the model to use `roc-start` to initialize a new Roc application.
+rocStart : { name : Str, handler : Str -> Task Str *, tool : Tool }
 rocStart = {
     name: rocStartTool.function.name,
     handler: rocStartHandler,

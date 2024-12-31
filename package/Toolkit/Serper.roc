@@ -21,6 +21,7 @@ import InternalTools exposing [Tool, buildTool]
 ## Expose name, handler and tool for serper.
 ##
 ## This tool allows the model to search google using the serper.dev API.
+serper : { name : Str, handler : Str -> Task Str *, tool : Tool }
 serper = {
     name: tool.function.name,
     handler,
