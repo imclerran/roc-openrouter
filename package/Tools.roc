@@ -57,7 +57,7 @@ HttpResponse : {
 ## Using the given toolHandlerMap, check the last message for tool calls, call all the tools in the tool call list, send the results back to the model, and handle any additional tool calls that may have been generated. If or when no more tool calls are present, return the updated list of messages.
 ## 
 ## The Dict maps function tool names strings to roc functions that take their arguments as a JSON string, parse the json, and return the tool's response.
-handleToolCalls : List Message, Client, Dict Str (Str -> Task Str _) -> Task (List Message) _
+handleToolCalls : List Message, Client, Dict Str (Str -> Task Str *) -> Task (List Message) _
 handleToolCalls = \messages, client, toolHandlerMap ->
     when List.last messages is
         Ok { role, toolCalls } if role == "assistant" ->
@@ -72,10 +72,25 @@ handleToolCalls = \messages, client, toolHandlerMap ->
 
         _ -> Task.ok messages
 
+# handleToolCallsLogged : List Message, Client, Dict Str (Str -> Task Str *), { logger ? Str -> Task {} * } -> Task (List Message) _
+# handleToolCallsLogged = \messages, client, toolHandlerMap, { logger ? \_ -> Task.ok {} } -> Task (List Message) _
+#     when List.last messages is
+#         Ok { role, toolCalls } if role == "assistant" ->
+#             if List.isEmpty toolCalls then
+#                 Task.ok messages
+#             else
+#                 toolMessages = dispatchToolCalls! toolCalls toolHandlerMap
+#                 messagesWithTools = List.join [messages, toolMessages]
+#                 response = sendHttpReq (Chat.buildHttpRequest client messagesWithTools {}) |> Task.result!
+#                 messagesWithResponse = updateMessagesFromResponse messagesWithTools response
+#                 handleToolCallsLogged messagesWithResponse client toolHandlerMap { logger }
+        
+#         _ -> Task.ok messages
+
 ## Dispatch the tool calls to the appropriate tool handler functions and return the list of tool messages.
 ##
 ## The Dict maps function tool names strings to roc functions that take their arguments as a JSON string, parse the json, and return the tool's response.
-dispatchToolCalls : List ToolCall, Dict Str (Str -> Task Str _) -> Task (List Message) _
+dispatchToolCalls : List ToolCall, Dict Str (Str -> Task Str *) -> Task (List Message) _
 dispatchToolCalls = \toolCallList, toolHandlerMap ->
     Task.loop { toolCalls: toolCallList, toolMessages: [] } \{ toolCalls, toolMessages } ->
         when List.first toolCalls is
@@ -87,6 +102,25 @@ dispatchToolCalls = \toolCallList, toolHandlerMap ->
                         Task.ok (Step { toolCalls: (List.dropFirst toolCalls 1), toolMessages: updatedToolMessages })
                     
                     _ -> 
+                        Task.ok (Step { toolCalls: (List.dropFirst toolCalls 1), toolMessages })
+
+            Err ListWasEmpty -> Task.ok (Done toolMessages)
+
+dispatchToolCallsLogged : List ToolCall, Dict Str (Str -> Task Str *), (Str -> Task Str *) -> Task (List Message) _
+dispatchToolCallsLogged = \toolCallList, toolHandlerMap, logger ->
+    Task.loop { toolCalls: toolCallList, toolMessages: [] } \{ toolCalls, toolMessages } ->
+        when List.first toolCalls is
+            Ok toolCall ->
+                toolName = toolCall.function.name
+                when toolHandlerMap |> Dict.get toolCall.function.name is
+                    Ok handler ->
+                        _ = logger! "Calling tool: $(toolName)"
+                        toolMessage = callTool! toolCall handler
+                        updatedToolMessages = List.append toolMessages toolMessage
+                        Task.ok (Step { toolCalls: (List.dropFirst toolCalls 1), toolMessages: updatedToolMessages })
+                    
+                    _ -> 
+                        logger! "Couldn't find tool: $(toolName)"
                         Task.ok (Step { toolCalls: (List.dropFirst toolCalls 1), toolMessages })
 
             Err ListWasEmpty -> Task.ok (Done toolMessages)
