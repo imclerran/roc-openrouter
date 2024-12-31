@@ -4,7 +4,7 @@ package [
     Prompt, 
     Tools, 
     Toolkit.FileSystem, 
-    #Toolkit.OpenWeatherMap,
+    Toolkit.OpenWeatherMap,
     Toolkit.Roc,
     Toolkit.Serper,
     Toolkit.UtcTime,

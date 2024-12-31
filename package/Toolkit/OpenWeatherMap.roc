@@ -84,7 +84,7 @@ geocodingHandler = \args ->
 ## Expose name, handler and tool for currentWeather
 ##
 ## This tool will allow the model to get the current weather for a location.
-currentWeather: { name : Str, handler : Str -> Task Str *, tool : Tool }
+currentWeather: { name : Str, handler : Str -> Task Str _, tool : Tool }
 currentWeather = {
     name: currentWeatherTool.function.name,
     handler: currentWeatherHandler,
