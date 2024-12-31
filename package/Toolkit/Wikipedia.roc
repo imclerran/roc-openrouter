@@ -1,7 +1,6 @@
 ## A collection of prebuilt tools for interacting with Wikipedia.
-##
-## Usage:
 ## ```
+## # USAGE:
 ## # Tool list to initialize the client
 ## tools = [wikipediaSearch, wikipediaParse]
 ## # Tool handler map is passed to Tools.handleToolCalls!
@@ -28,6 +27,7 @@ baseUrl = "https://en.wikipedia.org/w/api.php"
 ## Expose name, handler and tool for the wikipediaSarch.
 ##
 ## This tool allows the model to search Wikipedia for a given query.
+wikipediaSearch : { name : Str, handler : Str -> Task Str *, tool : Tool }
 wikipediaSearch = {
     name: wikipediaSearchTool.function.name,
     handler: wikipediaSearchHandler,
@@ -94,6 +94,7 @@ wikipediaSearchHandler = \args ->
 ## Expose name, handler and tool for the wikipediaParse tool.
 ##
 ## This tool allows the model to parse a Wikipedia article.
+wikipediaParse : { name : Str, handler : Str -> Task Str *, tool : Tool }
 wikipediaParse = {
     name: wikipediaParseTool.function.name,
     handler: wikipediaParseHandler,

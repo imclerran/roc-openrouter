@@ -1,7 +1,6 @@
 ## A prebuilt tool for getting the current UTC time.
-##
-## Usage:
 ## ```
+## # USAGE:
 ## # Tool list to initialize the client
 ## tools = [utcNow]
 ## # Tool handler map is passed to Tools.handleToolCalls!
@@ -19,7 +18,10 @@ module { getUtcNow, utcToNanos } -> [utcNow]
 import InternalTools exposing [Tool, buildTool]
 import iso.DateTime
 
-## Expose name, handler and tool for utcNow
+## Expose name, handler and tool for utcNow.
+##
+## This tool allows the model to get the current UTC time as an ISO 8601 string.
+utcNow : { name : Str, handler : Str -> Task Str *, tool : Tool }
 utcNow = {
     name: tool.function.name,
     handler,
@@ -27,8 +29,6 @@ utcNow = {
 }
 
 ## Tool definition for the utcNow function
-##
-## This tool allows the model to get the current UTC time as an ISO 8601 string.
 tool : Tool
 tool = buildTool "utcNow" "Get the current UTC time as an ISO 8601 string" []
 
