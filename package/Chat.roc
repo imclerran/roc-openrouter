@@ -10,7 +10,7 @@ module [
     buildHttpRequest,
     decodeErrorResponse,
     decodeResponse,
-    updateMessagesFromResponse,
+    updateMessageList,
     decodeTopMessageChoice,
     encodeRequestBody,
     initClient,
@@ -248,8 +248,8 @@ decodeTopMessageChoice = \responseBodyBytes ->
 decodeErrorResponse = Shared.decodeErrorResponse
 
 ## Decode the response from the OpenRouter API and append the first message choice to the list of messages. Any errors encountered will be appended as system messages.
-updateMessagesFromResponse : Result HttpResponse _, List Message -> List Message
-updateMessagesFromResponse = \responseRes, messages->
+updateMessageList : Result HttpResponse _, List Message -> List Message
+updateMessageList = \responseRes, messages->
     when responseRes is
         Ok response ->
             when decodeTopMessageChoice response.body is
