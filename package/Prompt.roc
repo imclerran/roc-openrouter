@@ -2,6 +2,7 @@
 module [
     PromptRequestBody,
     PromptResponseBody,
+    Client,
     buildHttpRequest,
     buildRequestBody,
     decodeErrorResponse,
@@ -18,8 +19,10 @@ module [
 import json.Json
 import json.Option exposing [Option]
 
-import Client exposing [Client]
+import Client
 import Shared exposing [RequestObject, ApiError]
+
+Client: Client.Client
 
 ## The structure of the request body to be sent in the Http request
 PromptRequestBody : {
