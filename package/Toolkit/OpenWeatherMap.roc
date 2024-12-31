@@ -1,9 +1,30 @@
+## A collection of prebuilt tools for interacting with the OpenWeatherMap API.
+##
+## Usage:
+## ```
+## # Tool list to initialize the client
+## tools = [geocoding, currentWeather]
+## # Tool handler map is passed to Tools.handleToolCalls!
+## toolHandlerMap = Dict.fromList [
+##     (geocoding.name, geocoding.handler),
+##     (currentWeather.name, currentWeather.handler),
+## ]
+## client = Client.init { apiKey, model: "tool-capable/model", tools }
+##
+## #...
+##
+## messages = Chat.appendUserMessage previousMessages newMessage
+## response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+## updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
+## ```
 module { sendHttpReq, getEnvVar } -> [geocoding, currentWeather]
 
 import json.Json
 import InternalTools exposing [Tool]
 
-## Expose name, handler and tool for geocoding
+## Expose name, handler and tool for geocoding.
+##
+## This tool will allow the model to get the correct latitude and longitude for a location, for use with the currentWeather tool.
 geocoding = {
     name: geocodingTool.function.name,
     handler: geocodingHandler,
@@ -62,6 +83,8 @@ geocodingHandler = \args ->
                     |> Task.ok
 
 ## Expose name, handler and tool for currentWeather
+##
+## This tool will allow the model to get the current weather for a location.
 currentWeather = {
     name: currentWeatherTool.function.name,
     handler: currentWeatherHandler,

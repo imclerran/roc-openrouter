@@ -1,3 +1,22 @@
+## A collection of prebuilt tools for interacting with Wikipedia.
+##
+## Usage:
+## ```
+## # Tool list to initialize the client
+## tools = [wikipediaSearch, wikipediaParse]
+## # Tool handler map is passed to Tools.handleToolCalls!
+## toolHandlerMap = Dict.fromList [
+##     (wikipediaSearch.name, wikipediaSearch.handler),
+##     (wikipediaParse.name, wikipediaParse.handler),
+## ]
+## client = Client.init { apiKey, model: "tool-capable/model", tools }
+##
+## #...
+##
+## messages = Chat.appendUserMessage previousMessages newMessage
+## response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+## updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
+## ```
 module { sendHttpReq } -> [wikipediaSearch, wikipediaParse]
 
 import json.Json
@@ -6,14 +25,16 @@ import Shared exposing [urlEncode]
 
 baseUrl = "https://en.wikipedia.org/w/api.php"
 
-## Expose name, handler and tool for the wikipediaSarch
+## Expose name, handler and tool for the wikipediaSarch.
+##
+## This tool allows the model to search Wikipedia for a given query.
 wikipediaSearch = {
     name: wikipediaSearchTool.function.name,
     handler: wikipediaSearchHandler,
     tool: wikipediaSearchTool,
 }
 
-## Tool definition for the wikepedia search function
+## Tool definition for the wikepedia search function.
 wikipediaSearchTool : Tool
 wikipediaSearchTool =
     queryParam = {
@@ -70,7 +91,9 @@ wikipediaSearchHandler = \args ->
                     "Failed to get response from Wikipedia"
                     |> Task.ok
 
-## Expose name, handler and tool for the wikipediaParse
+## Expose name, handler and tool for the wikipediaParse tool.
+##
+## This tool allows the model to parse a Wikipedia article.
 wikipediaParse = {
     name: wikipediaParseTool.function.name,
     handler: wikipediaParseHandler,

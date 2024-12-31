@@ -1,10 +1,30 @@
+## A prebuilt tool for interacting with Wolfram Alpha.
+##
+## Usage:
+## ```
+## # Tool list to initialize the client
+## tools = [wolframShortAnswer]
+## # Tool handler map is passed to Tools.handleToolCalls!
+## toolHandlerMap = Dict.fromList [
+##     (wolframShortAnswer.name, wolframShortAnswer.handler),
+## ]
+## client = Client.init { apiKey, model: "tool-capable/model", tools }
+##
+## #...
+##
+## messages = Chat.appendUserMessage previousMessages newMessage
+## response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+## updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
+## ```
 module { sendHttpReq, getEnvVar } -> [wolframShortAnswer]
 
 import json.Json
 import InternalTools exposing [Tool]
 import Shared exposing [urlEncode]
 
-## Expose name, handler and tool for shortAnswer
+## Expose name, handler and tool for shortAnswer.
+##
+## This tool allows the model to ask Wolfram Alpha a question and get a short answer.
 wolframShortAnswer = {
     name: shortAnswerTool.function.name,
     handler: shortAnswerHandler,

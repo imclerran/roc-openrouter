@@ -1,9 +1,27 @@
+## A prebuilt tool for interacting with the WorldTimeApi.
+##
+## Usage:
+## ```
+## # Tool list to initialize the client
+## tools = [currentTime]
+## # Tool handler map is passed to Tools.handleToolCalls!
+## toolHandlerMap = Dict.fromList [(currentTime.name, currentTime.handler)]
+## client = Client.init { apiKey, model: "tool-capable/model", tools }
+##
+## #...
+##
+## messages = Chat.appendUserMessage previousMessages newMessage
+## response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+## updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
+## ```
 module { sendHttpReq } -> [currentTime]
 
 import InternalTools exposing [Tool]
 import json.Json
 
-## Expose name, handler and tool for the currentTime
+## Expose name, handler and tool for the currentTime.
+##
+## This tool allows the model to get the current time data for a given timezone.
 currentTime = {
     name: tool.function.name,
     handler,

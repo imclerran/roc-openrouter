@@ -1,3 +1,24 @@
+## A collection of prebuilt tools for interacting with the Roc programming language CLI.
+##
+## Usage:
+## ```
+## # Tool list to initialize the client
+## tools = [roc, rocCheck, rocTest, rocStart]
+## # Tool handler map is passed to Tools.handleToolCalls!
+## toolHandlerMap = Dict.fromList [
+##     (roc.name, roc.handler),
+##     (rocCheck.name, rocCheck.handler),
+##     (rocTest.name, rocTest.handler),
+##     (rocStart.name, rocStart.handler),
+## ]
+## client = Client.init { apiKey, model: "tool-capable/model", tools }
+##
+## #...
+##
+## messages = Chat.appendUserMessage previousMessages newMessage
+## response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
+## updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
+## ```
 module { cmdNew, cmdArg, cmdOutput } -> [roc, rocCheck, rocTest, rocStart]
 
 import json.Json
@@ -14,6 +35,9 @@ CommandErr : [
     IOError Str,
 ]
 
+## Expose name, handler and tool for roc.
+##
+## This tool will allow the model to run `roc` for a roc file.
 roc = {
     name: rocTool.function.name,
     handler: rocHandler,
@@ -51,6 +75,9 @@ rocHandler = \args ->
                     |> cmdOutputResultToStr
                     |> Task.ok
 
+## Expose name, handler and tool for rocCheck.
+##
+## This tool will allow the model to run `roc check` for a Roc file.
 rocCheck = {
     name: rocCheckTool.function.name,
     handler: rocCheckHandler,
@@ -89,6 +116,9 @@ rocCheckHandler = \args ->
                     |> cmdOutputResultToStr
                     |> Task.ok
 
+## Expose name, handler and tool for rocTest.
+##
+## This tool will allow the model to run `roc test` for a Roc file.
 rocTest = {
     name: rocTestTool.function.name,
     handler: rocTestHandler,
@@ -127,6 +157,9 @@ rocTestHandler = \args ->
                     |> cmdOutputResultToStr
                     |> Task.ok
 
+## Expose name, handler and tool for rocStart.
+##
+## This tool will allow the model to use `roc-start` to initialize a new Roc application.
 rocStart = {
     name: rocStartTool.function.name,
     handler: rocStartHandler,
