@@ -8,12 +8,11 @@
 ##     (wolframShortAnswer.name, wolframShortAnswer.handler),
 ## ]
 ## client = Client.init { apiKey, model: "tool-capable/model", tools }
-##
 ## #...
-##
 ## messages = Chat.appendUserMessage previousMessages newMessage
 ## response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
-## updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
+## updatedMessages = updateMessagesFromResponse response messages 
+##     |> Tools.handleToolCalls! client toolHandlerMap
 ## ```
 module { sendHttpReq, getEnvVar } -> [wolframShortAnswer]
 
