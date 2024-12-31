@@ -1,4 +1,4 @@
-module { sendHttpReq } -> [Tool, ToolCall, buildTool, handleToolCalls, dispatchToolCalls] 
+module { sendHttpReq } -> [Tool, ToolCall, buildTool, handleToolCalls, handleToolCallsLogged, dispatchToolCalls, dispatchToolCallsLogged] 
 
 # import json.Option exposing [Option]
 import InternalTools
@@ -72,20 +72,20 @@ handleToolCalls = \messages, client, toolHandlerMap ->
 
         _ -> Task.ok messages
 
-# handleToolCallsLogged : List Message, Client, Dict Str (Str -> Task Str *), { logger ? Str -> Task {} * } -> Task (List Message) _
-# handleToolCallsLogged = \messages, client, toolHandlerMap, { logger ? \_ -> Task.ok {} } -> Task (List Message) _
-#     when List.last messages is
-#         Ok { role, toolCalls } if role == "assistant" ->
-#             if List.isEmpty toolCalls then
-#                 Task.ok messages
-#             else
-#                 toolMessages = dispatchToolCalls! toolCalls toolHandlerMap
-#                 messagesWithTools = List.join [messages, toolMessages]
-#                 response = sendHttpReq (Chat.buildHttpRequest client messagesWithTools {}) |> Task.result!
-#                 messagesWithResponse = updateMessagesFromResponse messagesWithTools response
-#                 handleToolCallsLogged messagesWithResponse client toolHandlerMap { logger }
+handleToolCallsLogged : List Message, Client, Dict Str (Str -> Task Str a), { logger ? Str -> Task {} a } -> Task (List Message) _
+handleToolCallsLogged = \messages, client, toolHandlerMap, { logger ? \_ -> Task.ok {} } ->
+    when List.last messages is
+        Ok { role, toolCalls } if role == "assistant" ->
+            if List.isEmpty toolCalls then
+                Task.ok messages
+            else
+                toolMessages = dispatchToolCalls! toolCalls toolHandlerMap
+                messagesWithTools = List.join [messages, toolMessages]
+                response = sendHttpReq (Chat.buildHttpRequest client messagesWithTools {}) |> Task.result!
+                messagesWithResponse = updateMessagesFromResponse messagesWithTools response
+                handleToolCallsLogged messagesWithResponse client toolHandlerMap { logger }
         
-#         _ -> Task.ok messages
+        _ -> Task.ok messages
 
 ## Dispatch the tool calls to the appropriate tool handler functions and return the list of tool messages.
 ##
@@ -106,15 +106,15 @@ dispatchToolCalls = \toolCallList, toolHandlerMap ->
 
             Err ListWasEmpty -> Task.ok (Done toolMessages)
 
-dispatchToolCallsLogged : List ToolCall, Dict Str (Str -> Task Str *), (Str -> Task Str *) -> Task (List Message) _
-dispatchToolCallsLogged = \toolCallList, toolHandlerMap, logger ->
+dispatchToolCallsLogged : List ToolCall, Dict Str (Str -> Task Str a), { logger ? Str -> Task {} a } -> Task (List Message) _
+dispatchToolCallsLogged = \toolCallList, toolHandlerMap, { logger ? \_ -> Task.ok {} } ->
     Task.loop { toolCalls: toolCallList, toolMessages: [] } \{ toolCalls, toolMessages } ->
         when List.first toolCalls is
             Ok toolCall ->
                 toolName = toolCall.function.name
                 when toolHandlerMap |> Dict.get toolCall.function.name is
                     Ok handler ->
-                        logger! "Calling tool: $(toolName)"
+                        {} = logger! "Calling tool: $(toolName)"
                         toolMessage = callTool! toolCall handler
                         updatedToolMessages = List.append toolMessages toolMessage
                         Task.ok (Step { toolCalls: (List.dropFirst toolCalls 1), toolMessages: updatedToolMessages })
