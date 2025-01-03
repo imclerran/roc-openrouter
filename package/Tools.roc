@@ -4,7 +4,6 @@ module { sendHttpReq } -> [Tool, ToolCall, buildTool, handleToolCalls, dispatchT
 import InternalTools
 import Chat
 import Client exposing [Client]
-import Shared exposing [HttpResponse]
 
 ## A tool that can be called by the AI model.
 ## ```
@@ -59,7 +58,7 @@ handleToolCalls = \messages, client, toolHandlerMap ->
                 toolMessages = dispatchToolCalls! toolCalls toolHandlerMap
                 messagesWithTools = List.join [messages, toolMessages]
                 response = sendHttpReq (Chat.buildHttpRequest client messagesWithTools {}) |> Task.result!
-                messagesWithResponse = updateMessagesFromResponse messagesWithTools response
+                messagesWithResponse = Chat.updateMessageList response messagesWithTools
                 handleToolCalls messagesWithResponse client toolHandlerMap
 
         _ -> Task.ok messages
@@ -94,17 +93,6 @@ callTool = \toolCall, handler ->
         name: toolCall.function.name,
         cached: Bool.false,
     }
-
-## Get the messages from the response and return the updated list of messages.
-updateMessagesFromResponse : List Message, Result HttpResponse _ -> List Message
-updateMessagesFromResponse = \messages, responseRes ->
-    when responseRes is
-        Ok response ->
-            when Chat.decodeTopMessageChoice response.body is
-                Ok message -> List.append messages message
-                _ -> messages
-
-        Err (HttpErr _) -> messages
 
 ## Build a tool object with the given name, description, and parameters.
 ## ```
