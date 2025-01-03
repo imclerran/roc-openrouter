@@ -252,7 +252,7 @@ updateMessageList = \responseRes, messages->
         Ok response ->
             when decodeTopMessageChoice response.body is
                 Ok message -> List.append messages message
-                Err (ApiError err) -> appendSystemMessage messages "API error: $(err.message)" {}
+                Err (ApiError err) -> appendSystemMessage messages "API error: $(Inspect.toStr err)" {} #err.message
                 Err NoChoices -> appendSystemMessage messages "No choices in API response" {}
                 Err (BadJson str) -> appendSystemMessage messages "Could not decode JSON response:\n$(str)" {}
                 Err DecodingError -> appendSystemMessage messages "Error decoding API response" {}
