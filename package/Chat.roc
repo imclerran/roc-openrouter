@@ -95,7 +95,6 @@ ChatRequestBody : {
     provider : {
         order : Option (List Str),
     },
-    responseFormat : { type : Str },
     models : Option (List Str),
     route : Option Str,
     # tools: Option (List Tools.Tool),
@@ -181,7 +180,6 @@ buildRequestBody = \client -> {
     seed: client.seed,
     maxTokens: client.maxTokens,
     provider: { order: client.providerOrder },
-    responseFormat: client.responseFormat,
     models: client.models,
     route: client.route,
 }
