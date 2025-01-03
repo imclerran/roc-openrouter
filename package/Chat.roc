@@ -256,8 +256,12 @@ updateMessageList = \responseRes, messages->
                 Err NoChoices -> appendSystemMessage messages "No choices in API response" {}
                 Err (BadJson str) -> appendSystemMessage messages "Could not decode JSON response:\n$(str)" {}
                 Err DecodingError -> appendSystemMessage messages "Error decoding API response" {}
+        
+        Err (HttpErr (BadStatus { code }) ) ->
+            appendSystemMessage messages "Http error: $(Num.toStr code)" {}
 
-        Err (HttpErr _) -> messages
+        Err (HttpErr _) -> 
+            appendSystemMessage messages "Http error" {}
 
 ## Encode the request body to be sent in the Http request.
 encodeRequestBody : ChatRequestBody -> List U8
