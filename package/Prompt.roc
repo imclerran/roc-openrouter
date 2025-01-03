@@ -41,7 +41,6 @@ PromptRequestBody : {
     provider : {
         order : Option (List Str),
     },
-    responseFormat : { type : Str },
     models : Option (List Str),
     route : Option Str,
 }
@@ -96,7 +95,6 @@ buildRequestBody = \client, prompt -> {
     seed: client.seed,
     maxTokens: client.maxTokens,
     provider: { order: client.providerOrder },
-    responseFormat: client.responseFormat,
     models: client.models,
     route: client.route,
 }

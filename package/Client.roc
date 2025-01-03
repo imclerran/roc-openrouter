@@ -16,7 +16,6 @@ module [
     setTopA,
     setSeed,
     setMaxTokens,
-    setResponseFormat,
     setModels,
     setRoute,
     setTools,
@@ -46,7 +45,6 @@ import InternalTools exposing [Tool]
 ##     topA : F32,
 ##     seed : Option U64,
 ##     maxTokens : Option U64,
-##     responseFormat : { type : Str },
 ##     models : Option (List Str),
 ##     route : Option Str,
 ##     tools: Option (List Tool),
@@ -68,7 +66,7 @@ Client : {
     topA : F32,
     seed : Option U64,
     maxTokens : Option U64,
-    responseFormat : { type : Str },
+    # responseFormat : { type : Str },
     models : Option (List Str),
     route : Option Str,
     tools: Option (List Tool),
@@ -101,13 +99,12 @@ init :
         topA ? F32,
         seed ? U64,
         maxTokens ? U64,
-        responseFormat ? Str,
         models ? List Str,
         route ? [UseFallback, NoFallback],
         tools ? List Tool,
     }
     -> Client
-init = \{ apiKey, model ? defaultModel, url ? defaultUrl, requestTimeout ? NoTimeout, providerOrder ? [], temperature ? 1.0, topP ? 1.0, topK ? 0, frequencyPenalty ? 0.0, presencePenalty ? 0.0, repetitionPenalty ? 1.0, minP ? 0.0, topA ? 0.0, seed ? 0, maxTokens ? 0, responseFormat ? "text", models ? [], route ? NoFallback, tools ? [] } ->
+init = \{ apiKey, model ? defaultModel, url ? defaultUrl, requestTimeout ? NoTimeout, providerOrder ? [], temperature ? 1.0, topP ? 1.0, topK ? 0, frequencyPenalty ? 0.0, presencePenalty ? 0.0, repetitionPenalty ? 1.0, minP ? 0.0, topA ? 0.0, seed ? 0, maxTokens ? 0, models ? [], route ? NoFallback, tools ? [] } ->
     {
         apiKey,
         model,
@@ -124,7 +121,6 @@ init = \{ apiKey, model ? defaultModel, url ? defaultUrl, requestTimeout ? NoTim
         topA,
         seed: Option.none {},
         maxTokens: Option.none {},
-        responseFormat: { type: responseFormat },
         models: Option.none {},
         route: Option.none {},
         tools: Option.none {},
@@ -231,10 +227,10 @@ setMaxTokens = \client, maxTokens ->
 
 ## Set the response format to either "text" or "json_object". Not supported by all models.
 ## Default: "" - no format
-setResponseFormat : Client, Str -> Client
-setResponseFormat = \client, responseFormat ->
-    responseFormatRecord = { type: responseFormat }
-    { client & responseFormat: responseFormatRecord }
+# setResponseFormat : Client, Str -> Client
+# setResponseFormat = \client, responseFormat ->
+#     responseFormatRecord = { type: responseFormat }
+#     { client & responseFormat: responseFormatRecord }
 
 ## Set the models for the auto router to choose from. If not set, the auto router will choose from a small selection of the top performing models.
 ## https://openrouter.ai/models/openrouter/auto
