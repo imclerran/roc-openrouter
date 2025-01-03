@@ -45,7 +45,7 @@ loop = \{ client, previousMessages } ->
 
         _ ->
             response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
-            updatedMessages = getMessagesFromResponse messages response
+            updatedMessages = Chat.updateMessageList response messages 
             printLastMessage! updatedMessages
             Task.ok (Step { client, previousMessages: updatedMessages })
 
@@ -66,21 +66,6 @@ printLastMessage = \messages ->
             Stdout.line! ("\nSystem: $(content)\n" |> Ansi.color { fg: Standard Blue })
 
         _ -> Task.ok {}
-
-## decode the response from the OpenRouter API and append the first message to the list of messages
-getMessagesFromResponse : List Message, Result Http.Response _ -> List Message
-getMessagesFromResponse = \messages, responseRes ->
-    when responseRes is
-        Ok response ->
-            when Chat.decodeTopMessageChoice response.body is
-                Ok message -> List.append messages message
-                Err (ApiError err) -> Chat.appendSystemMessage messages "API error: $(err.message)" {}
-                Err NoChoices -> Chat.appendSystemMessage messages "No choices in API response" {}
-                Err (BadJson str) -> Chat.appendSystemMessage messages "Could not decode JSON response:\n$(str)" {}
-                Err DecodingError -> Chat.appendSystemMessage messages "Error decoding API response" {}
-
-        Err (HttpErr err) ->
-            Chat.appendSystemMessage messages (Http.errorToString err) {}
 
 ## Prompt the user to choose a model and return the selected model
 getModelChoice : Task Str _
@@ -111,33 +96,33 @@ initializeMessages =
         {}
 
 ## The default model selection
-defaultModel = "meta-llama/llama-3.1-8b-instruct:free"
+defaultModel = "google/gemini-flash-1.5-8b"
 
 ## Define the model choices
 modelChoices =
     Dict.empty {}
     |> Dict.insert "1" defaultModel
     |> Dict.insert "2" "mistralai/mixtral-8x7b-instruct"
-    |> Dict.insert "3" "mistralai/mistral-small"
+    |> Dict.insert "3" "x-ai/grok-beta"
     |> Dict.insert "4" "mistralai/mistral-large"
     |> Dict.insert "5" "gryphe/mythomax-l2-13b"
     |> Dict.insert "6" "microsoft/wizardlm-2-8x22b"
     |> Dict.insert "7" "openai/gpt-3.5-turbo"
     |> Dict.insert "8" "openai/gpt-4o"
-    |> Dict.insert "9" "google/gemini-pro-1.5"
+    |> Dict.insert "9" "google/gemini-2.0-flash-thinking-exp:free"
 
 ## Define the preferred providers for each model
 preferredProviders =
     Dict.empty {}
-    |> Dict.insert "meta-llama/llama-3-8b-instruct:free" []
+    |> Dict.insert defaultModel []
     |> Dict.insert "mistralai/mixtral-8x7b-instruct" ["Fireworks", "Together", "Lepton"]
-    |> Dict.insert "mistralai/mistral-small" []
+    |> Dict.insert "x-ai/grok-beta" []
     |> Dict.insert "mistralai/mistral-large" []
     |> Dict.insert "gryphe/mythomax-l2-13b" ["DeepInfra", "Fireworks", "Together"]
     |> Dict.insert "microsoft/wizardlm-2-8x22b" []
     |> Dict.insert "openai/gpt-3.5-turbo" []
     |> Dict.insert "openai/gpt-4o" []
-    |> Dict.insert "google/gemini-pro-1.5" []
+    |> Dict.insert "google/gemini-2.0-flash-thinking-exp:free" []
 
 ## Generate a string to print for the model selection menu
 modelMenuString =
