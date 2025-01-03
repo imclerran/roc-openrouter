@@ -24,7 +24,7 @@ main =
         Stdout.write! "You: "
         messages = Chat.appendUserMessage previousMessages Stdin.line! {}
         response = Http.send (Chat.buildHttpRequest client messages {}) |> Task.result!
-        updatedMessages = updateMessagesFromResponse response messages |> Tools.handleToolCalls! client toolHandlerMap
+        updatedMessages = Chat.updateMessageList response messages |> Tools.handleToolCalls! client toolHandlerMap
         printLastMessage! updatedMessages
         Task.ok (Step { previousMessages: updatedMessages })
 
@@ -47,21 +47,6 @@ printLastMessage = \messages ->
             Stdout.line! ("\nAssistant: $(content)\n" |> Ansi.color { fg: Standard Cyan })
 
         _ -> Task.ok {}
-
-## decode the response from the OpenRouter API and append the first message to the list of messages
-updateMessagesFromResponse : Result Http.Response _, List Message -> List Message
-updateMessagesFromResponse = \responseRes, messages ->
-    when responseRes is
-        Ok response ->
-            when Chat.decodeTopMessageChoice response.body is
-                Ok message -> List.append messages message
-                Err (ApiError err) -> Chat.appendSystemMessage messages "API error: $(err.message)" {}
-                Err NoChoices -> Chat.appendSystemMessage messages "No choices in API response" {}
-                Err (BadJson str) -> Chat.appendSystemMessage messages "Could not decode JSON response:\n$(str)" {}
-                Err DecodingError -> Chat.appendSystemMessage messages "Error decoding API response" {}
-
-        Err (HttpErr err) ->
-            Chat.appendSystemMessage messages (Http.errorToString err) {}
 
 ## Map of tool names to tool handlers
 toolHandlerMap : Dict Str (Str -> Task Str _)
